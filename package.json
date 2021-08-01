@@ -1,0 +1,22 @@
+{
+  "name": "node-carplay",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rhysmorgan134/node-CarPlay.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rhysmorgan134/node-CarPlay/issues"
+  },
+  "homepage": "https://github.com/rhysmorgan134/node-CarPlay#readme",
+  "dependencies": {
+    "usb": "^1.7.1"
+  }
+}
