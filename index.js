@@ -1,3 +1,3 @@
-const Carplay = require('./module/Carplay')
+const Carplay = require('./modules/Carplay')
 
 module.exports = Carplay
