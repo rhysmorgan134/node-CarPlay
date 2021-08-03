@@ -15,6 +15,10 @@ class Carplay extends EventEmitter {
         this._dongle = new DongleHandler(config)
     }
 
+    sendTouch = (x, y) => {
+        this._dongle.sendTouch(x, y)
+    }
+
     getAssets = () => {
         const dir = './assets';
         if (fs.existsSync(dir)) {

@@ -70,6 +70,21 @@ class DongleHandler extends EventEmitter {
         }
     }
 
+    sendTouch = (x, y) => {
+        let msgType = 5
+        let action = 16
+        let actionB = Buffer.alloc(4)
+        let xB = Buffer.alloc(4)
+        let yB = Buffer.alloc(4)
+        let nothing = Buffer.alloc(4)
+        actionB.writeUInt32LE(action)
+        xB.writeUInt32LE(10000 * x)
+        yB.writeUInt32LE(10000 * y)
+        let message = [actionB, xB, yB, nothing]
+        let messageB = Buffer.concat(message)
+        this.serialise(messageB, msgType)
+    }
+
     startUp = async () => {
         await this.sendInt(this._dpi, "/tmp/screen_dpi")
 
@@ -108,6 +123,7 @@ class DongleHandler extends EventEmitter {
         let config = Buffer.concat([width, height, fps, format, packetMax, iBox, phoneMode])
         await this.serialise(config, 1)
     }
+
 
     sendInt = async (integer, fileName) => {
         let message = new Buffer(4);
