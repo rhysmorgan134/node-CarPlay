@@ -6,8 +6,11 @@ class VideoParseWS extends EventEmitter{
     constructor(width, height, bitrate, ws, updateState) {
         super();
         this._parser = spawn('/usr/bin/ffmpeg', [
-            "-threads", "4",
+	    "-hide_banner",
+	    "-loglevel", "error",
+            "-threads", "2",
             "-i", "-",
+	        "-tune", "zerolatency",
             "-pix_fmt", "yuv420p",
             "-f", "mpegts",
             "-codec:v", "mpeg1video",
@@ -15,15 +18,15 @@ class VideoParseWS extends EventEmitter{
             "-b:v", bitrate.toString() + "k",
             "-bf", "0",
             ws])
-        // this._parser.stderr.on('data', ((data) => {
-        //     console.log(data.toString())
-        // }))
-        //
-        // this._parser.stdout.on('data', ((data) => {
-        //     console.log(data.toString())
-        // }))
-        //
-        // this._parser.stdout.pipe(process.stdout)
+         this._parser.stderr.on('data', ((data) => {
+             console.log(data.toString())
+         }))
+        
+         this._parser.stdout.on('data', ((data) => {
+             console.log(data.toString())
+         }))
+        
+         this._parser.stdout.pipe(process.stdout)
 
         this._readable = new Readable(1024);
         this._readable._read = () => {
@@ -37,7 +40,7 @@ class VideoParseWS extends EventEmitter{
 
     setActive = (bytesToRead) => {
         this._bytesToRead = bytesToRead;
-        this.updateState(1)
+        this.updateState(6)
     }
 
     addBytes = (bytes) => {

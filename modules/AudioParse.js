@@ -6,7 +6,9 @@ class AudioParse extends EventEmitter{
     constructor(updateState) {
         super();
         this._parser = spawn('/usr/bin/ffplay', [
-            "-",
+            "-hide_banner",
+	    "-loglevel", "error",
+	    "-",
             "-f", "s16le",
             "-ac", "2",
             "-ar", `44100`,
@@ -16,7 +18,7 @@ class AudioParse extends EventEmitter{
         }))
 
         this._parser.stdout.on('data', ((data) => {
-            console.log(data.toString())
+            //console.log(data.toString())
         }))
 
         this._parser.stdout.pipe(process.stdout)
@@ -24,6 +26,28 @@ class AudioParse extends EventEmitter{
         this._readable = new Readable(1024);
         this._readable._read = () => {
             this._readable.pipe(this._parser.stdin)
+        }
+        this._parser2 = spawn('/usr/bin/ffplay', [
+            "-hide_banner",
+            "-loglevel", "error",
+            "-",
+            "-f", "s16le",
+            "-ac", "1",
+            "-ar", `16000`,
+            "-nodisp"])
+        this._parser2.stderr.on('data', ((data) => {
+            console.log(data.toString())
+        }))
+
+        this._parser2.stdout.on('data', ((data) => {
+            //console.log(data.toString())
+        }))
+
+        this._parser2.stdout.pipe(process.stdout)
+
+        this._readable2 = new Readable(1024);
+        this._readable2._read = () => {
+            this._readable2.pipe(this._parser2.stdin)
         }
         this.updateState = updateState;
         this._bytesToRead = 0;
@@ -34,7 +58,7 @@ class AudioParse extends EventEmitter{
     setActive = (bytesToRead) => {
         //console.log("sound active")
         this._bytesToRead = bytesToRead;
-        this.updateState(2)
+        this.updateState(7)
     }
 
     addBytes = (bytes) => {
@@ -48,12 +72,25 @@ class AudioParse extends EventEmitter{
 
     pipeData = () => {
         let fullData = Buffer.concat(this._bytesRead)
+        let decodeType = fullData.readUInt32LE(0)
+        let volume = fullData.readFloatLE(4)
+        let audioType = fullData.readUInt32LE(8)
+        //console.log(decodeType, volume, audioType)
         let outputData = fullData.slice(12, this._bytesToRead)
-        if(this._parser.stdin.writable) {
-            this._parser.stdin.write(outputData)
+        if(decodeType === 2) {
+            if(this._parser.stdin.writable) {
+                this._parser.stdin.write(outputData)
+            } else {
+                this.emit('warning', 'Audio Stream Full')
+            }
         } else {
-            this.emit('warning', 'Audio Stream Full')
+            if(this._parser2.stdin.writable) {
+                this._parser2.stdin.write(outputData)
+            } else {
+                this.emit('warning', 'Audio Stream Full')
+            }
         }
+
         this._bytesToRead = 0;
         this._bytesRead = [];
         this._bytesSize = 0;

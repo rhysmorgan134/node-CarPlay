@@ -13,10 +13,13 @@ class Carplay extends EventEmitter {
         this._height = config.height;
         this.getAssets()
         this._dongle = new DongleHandler(config)
+        this._dongle.on('status', (data) => {
+            this.emit('status', data)
+        })
     }
 
-    sendTouch = (x, y) => {
-        this._dongle.sendTouch(x, y)
+    sendTouch = (type, x, y) => {
+        this._dongle.sendTouch(type, x, y)
     }
 
     getAssets = () => {
@@ -30,6 +33,11 @@ class Carplay extends EventEmitter {
             execSync('unzip AutoKit.apk \'assets/*\'')
         }
     }
+
+    getStatus = () => {
+        return this._dongle.getPlugged()
+    }
+
 
 }
 

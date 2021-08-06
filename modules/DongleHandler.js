@@ -2,6 +2,7 @@ const usb = require('usb');
 const EventEmitter = require('events');
 const VideoParser = require('./VideoParseWS')
 const AudioParser = require('./AudioParse')
+const MessageHandler = require('./MessageHandler')
 const fs = require("fs");
 
 class DongleHandler extends EventEmitter {
@@ -25,6 +26,8 @@ class DongleHandler extends EventEmitter {
         this._outEP = null;
         this._videoParser = new VideoParser(this._width, this._height, 2000, "http://localhost:8081/supersecret", this.updateState)
         this._audioParser = new AudioParser(this.updateState)
+        this._messageHandler = new MessageHandler(this.updateState, this.setPlugged)
+        this.plugged = false;
         if(this.getDevice()) {
             console.log("device connected and ready")
         } else {
@@ -70,9 +73,9 @@ class DongleHandler extends EventEmitter {
         }
     }
 
-    sendTouch = (x, y) => {
+    sendTouch = (type, x, y) => {
         let msgType = 5
-        let action = 16
+        let action = type
         let actionB = Buffer.alloc(4)
         let xB = Buffer.alloc(4)
         let yB = Buffer.alloc(4)
@@ -122,6 +125,15 @@ class DongleHandler extends EventEmitter {
         phoneMode.writeUInt32LE(2)
         let config = Buffer.concat([width, height, fps, format, packetMax, iBox, phoneMode])
         await this.serialise(config, 1)
+    }
+
+    setPlugged = (state) => {
+        this.plugged = state;
+        this.emit("status", {status: this.plugged})
+    }
+
+    getPlugged() {
+        return this.plugged
     }
 
 
@@ -174,6 +186,7 @@ class DongleHandler extends EventEmitter {
     }
 
     updateState = (state) => {
+        // console.log("updating state")
         this._state = state;
     }
 
@@ -190,12 +203,17 @@ class DongleHandler extends EventEmitter {
                     if(length > 16) {
                         this._audioParser.setActive(length)
                     }
-                }
+                } else {
+                    let length = data.readUInt32LE(4)
+                    this._messageHandler.parseHeader(type, length, data)
+			}
             }
-        } else if(this._state === 1) {
+        } else if(this._state === 6) {
             this._videoParser.addBytes(data)
-        } else if(this._state === 2) {
+        } else if(this._state === 7) {
             this._audioParser.addBytes(data)
+        } else {
+            this._messageHandler.parseData(data)
         }
     }
 

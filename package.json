@@ -1,22 +1,48 @@
 {
-  "name": "node-carplay",
-  "version": "1.0.6",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "_from": "node-carplay@1.0.6",
+  "_id": "node-carplay@1.0.6",
+  "_inBundle": false,
+  "_integrity": "sha512-Sz4clBZeRXtlWl/LATfXKhywrfErbHgFIoa4oWw/F16M2NGxlF8ndBMXhoEMN0ObJSnHSZ9Wyft7Cv5FhwUlFQ==",
+  "_location": "/node-carplay",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "node-carplay@1.0.6",
+    "name": "node-carplay",
+    "escapedName": "node-carplay",
+    "rawSpec": "1.0.6",
+    "saveSpec": null,
+    "fetchSpec": "1.0.6"
   },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/node-carplay/-/node-carplay-1.0.6.tgz",
+  "_shasum": "166ad43469b454d1dc21477eb9a19fbd85afedd9",
+  "_spec": "node-carplay@1.0.6",
+  "_where": "/home/pi/carplay/carplay/src",
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/rhysmorgan134/node-CarPlay/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "usb": "^1.7.1"
+  },
+  "deprecated": false,
+  "description": "",
+  "homepage": "https://github.com/rhysmorgan134/node-CarPlay#readme",
+  "license": "ISC",
+  "main": "index.js",
+  "name": "node-carplay",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rhysmorgan134/node-CarPlay.git"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/rhysmorgan134/node-CarPlay/issues"
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "homepage": "https://github.com/rhysmorgan134/node-CarPlay#readme",
-  "dependencies": {
-    "usb": "^1.7.1"
-  }
+  "version": "1.0.6"
 }
