@@ -1,10 +1,11 @@
 
-<h3 align="center">Node Carplay</h3>
+<h3 align="center">React Carplay</h3>
 
   <p align="center">
     Node Carplay npm package
-
 </p>
+
+    
 
 
 
@@ -28,7 +29,9 @@
     <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgements">Acknowledgements</a></li>
   </ol>
 </details>
 
@@ -38,6 +41,8 @@
 ## About The Project
 
 ![node carplay Screen Shot](https://i.imgur.com/gNZjk3J.png)
+
+[example video](https://youtu.be/mBeYd7RNw1w)
 
 This is a carplay module for nodejs. It is currently in development, but is at a useable stage. Currently it interacts with a Carlinkit adapter, it opens communication with it, sends various
 configuration settings and also downloads the APK file thats usually used with it. The APK file then gets extracted and its contents get sent over usb to the
@@ -105,3 +110,4 @@ Contributions are what make the open source community such an amazing place to b
 ## Contact
 
 Your Name - Rhys Morgan - rhysm134@gmail.com
+
