@@ -40,7 +40,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-![node carplay Screen Shot](https://i.imgur.com/gNZjk3J.png)
+![node carplay Screen Shot](https://i.imgur.com/egkvgau.png)
 
 [example video](https://youtu.be/mBeYd7RNw1w)
 
