@@ -1,5 +1,5 @@
 
-<h3 align="center">React Carplay</h3>
+<h3 align="center">Node Carplay</h3>
 
   <p align="center">
     Node Carplay npm package
