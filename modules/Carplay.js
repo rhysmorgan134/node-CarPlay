@@ -16,6 +16,9 @@ class Carplay extends EventEmitter {
         this._dongle.on('status', (data) => {
             this.emit('status', data)
         })
+	this._dongle.on('quit', () => {
+	   this.emit('quit');
+	})
     }
 
     sendTouch = (type, x, y) => {

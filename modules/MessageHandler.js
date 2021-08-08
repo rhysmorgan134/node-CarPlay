@@ -1,7 +1,7 @@
 
 
 class MessageHandler {
-    constructor(updateState, plugged) {
+    constructor(updateState, plugged, quit) {
         this.active = null;
         this.functions = {
             20: this.parse20,
@@ -10,13 +10,15 @@ class MessageHandler {
             10: this.parse10,
             12: this.parse12,
             2: this.parse2,
-            4: this.parse4
+            4: this.parse4,
+	    0: this.parse0
         };
         this.update = updateState;
         this.bytesToRead = 0;
         this.bytesRead = 0;
         this.bytes = []
         this.plugged = plugged;
+	this.quit = quit;
     }
 
     callFunction = (data) => {
@@ -42,6 +44,9 @@ class MessageHandler {
             case 4:
                 this.parse4()
                 break
+	    case 0:
+		this.parse0()
+		break
             default:
                 break
         }
@@ -140,6 +145,12 @@ class MessageHandler {
     parse4 = (data) => {
         console.log("sending unplugged event")
         this.plugged(false)
+        this.update(0)
+    }
+
+    parse0 = (data) => {
+        console.log("sending unplugged event")
+        this.quit()
         this.update(0)
     }
 }

@@ -24,9 +24,9 @@ class DongleHandler extends EventEmitter {
         this._interface = null;
         this._inEP = null;
         this._outEP = null;
-        this._videoParser = new VideoParser(this._width, this._height, 1000, "http://localhost:8081/supersecret", this.updateState)
+        this._videoParser = new VideoParser(this._width, this._height, 2000, "http://localhost:8081/supersecret", this.updateState)
         this._audioParser = new AudioParser(this.updateState)
-        this._messageHandler = new MessageHandler(this.updateState, this.setPlugged)
+        this._messageHandler = new MessageHandler(this.updateState, this.setPlugged, this.quit)
         this.plugged = false;
         if(this.getDevice()) {
             console.log("device connected and ready")
@@ -71,6 +71,10 @@ class DongleHandler extends EventEmitter {
             setTimeout(this.getDevice, 2000)
             return false
         }
+    }
+
+    quit = () => {
+	this.emit('quit')
     }
 
     sendTouch = (type, x, y) => {

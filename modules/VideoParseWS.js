@@ -8,9 +8,10 @@ class VideoParseWS extends EventEmitter{
         this._parser = spawn('/usr/bin/ffmpeg', [
 	    "-hide_banner",
 	    "-loglevel", "error",
-            "-threads", "2",
+            "-threads", "-2",
             "-i", "-",
-	        "-tune", "zerolatency",
+	    "-c:v", "h264_v4l2m2m",
+	    "-tune", "zerolatency",
             "-pix_fmt", "yuv420p",
             "-f", "mpegts",
             "-codec:v", "mpeg1video",
