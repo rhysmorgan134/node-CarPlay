@@ -24,7 +24,7 @@ class DongleHandler extends EventEmitter {
         this._interface = null;
         this._inEP = null;
         this._outEP = null;
-        this._videoParser = new VideoParser(this._width, this._height, 2000, "http://localhost:8081/supersecret", this.updateState)
+        this._videoParser = new VideoParser(this._width, this._height, 1000, "http://localhost:8081/supersecret", this.updateState)
         this._audioParser = new AudioParser(this.updateState)
         this._messageHandler = new MessageHandler(this.updateState, this.setPlugged)
         this.plugged = false;
