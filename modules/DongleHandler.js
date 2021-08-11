@@ -44,8 +44,8 @@ class DongleHandler extends EventEmitter {
             this._device.reset(() => {})
             this._interface = this._device.interface(0);
             this._interface.claim();
-            this._inEP = this._interface.endpoint(129);
-            this._outEP = this._interface.endpoint(1);
+            this._inEP = this._interface.endpoints[0];
+            this._outEP = this._interface.endpoints[1];
             this._inEP.clearHalt((err) => {
                 if(err) {
                     console.log("Error clearing inendpoint halt")
