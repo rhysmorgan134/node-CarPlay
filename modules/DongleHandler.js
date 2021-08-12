@@ -1,9 +1,9 @@
+const fs = require("fs");
 const usb = require('usb');
 const EventEmitter = require('events');
 const VideoParser = require('./VideoParseWS')
 const AudioParser = require('./AudioParse')
 const MessageHandler = require('./MessageHandler')
-const fs = require("fs");
 
 class DongleHandler extends EventEmitter {
     constructor({dpi=160, nightMode=0, hand=0, boxName="nodePlay", width=800, height=640, fps=20}) {
@@ -74,7 +74,7 @@ class DongleHandler extends EventEmitter {
     }
 
     quit = () => {
-	this.emit('quit')
+        this.emit('quit')
     }
 
     sendTouch = (type, x, y) => {
@@ -142,7 +142,7 @@ class DongleHandler extends EventEmitter {
 
 
     sendInt = async (integer, fileName) => {
-        let message = new Buffer(4);
+        let message = Buffer.alloc(4);
         message.writeUInt32LE(integer)
         await this.sendFile(message, fileName)
     }
@@ -210,7 +210,7 @@ class DongleHandler extends EventEmitter {
                 } else {
                     let length = data.readUInt32LE(4)
                     this._messageHandler.parseHeader(type, length, data)
-			}
+                }
             }
         } else if(this._state === 6) {
             this._videoParser.addBytes(data)
@@ -222,7 +222,7 @@ class DongleHandler extends EventEmitter {
     }
 
     getLength = (data) => {
-        let buffer = new Buffer.alloc(4);
+        let buffer = Buffer.alloc(4);
         buffer.writeUInt32LE(Buffer.byteLength(data))
         return buffer
     }
