@@ -204,9 +204,11 @@ class DongleHandler extends EventEmitter {
                     this._videoParser.setActive(length)
                 } else if (type ===7) {
                     let length = data.readUInt32LE(4)
-                    if(length > 16) {
+                    if(length > 0) {
                         this._audioParser.setActive(length)
-                    }
+                    } else {
+			console.log(data)
+		    }
                 } else {
                     let length = data.readUInt32LE(4)
                     this._messageHandler.parseHeader(type, length, data)
