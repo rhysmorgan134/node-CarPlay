@@ -5,7 +5,7 @@ const { Readable } = require('stream');
 class AudioParse extends EventEmitter{
     constructor(updateState) {
         super();
-        this._parser = spawn('/usr/bin/ffplay', [
+        this._parser = spawn('ffplay', [
             "-hide_banner",
 	    "-loglevel", "error",
 	    "-",
@@ -27,7 +27,7 @@ class AudioParse extends EventEmitter{
         this._readable._read = () => {
             this._readable.pipe(this._parser.stdin)
         }
-        this._parser2 = spawn('/usr/bin/ffplay', [
+        this._parser2 = spawn('ffplay', [
             "-hide_banner",
             "-loglevel", "error",
             "-",
