@@ -5,7 +5,7 @@ const { Readable } = require('stream');
 class VideoParseWS extends EventEmitter{
     constructor(width, height, bitrate, ws, updateState) {
         super();
-        this._parser = spawn('/usr/bin/ffmpeg', [
+        this._parser = spawn('ffmpeg', [
 	    "-hide_banner",
 	    "-loglevel", "error",
             "-threads", "2",

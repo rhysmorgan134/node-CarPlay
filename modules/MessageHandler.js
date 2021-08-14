@@ -45,10 +45,11 @@ class MessageHandler {
                 this.parse4()
                 break
 	    case 0:
-		this.parse0()
-		break
-            default:
-                break
+		    this.parse0()
+            console.log("received 0", data)
+		    break
+        default:
+            break
         }
     }
 
@@ -60,7 +61,7 @@ class MessageHandler {
             if(length === 0) {
                 this.parseData({})
             }
-            console.log("parsing type: ", type, " for length: ", length);
+            console.log("parsing type: ", type, " for length: ", length, data);
         } else {
             console.log("unkown type: ", type, " with data:: ", data)
         }
@@ -149,7 +150,8 @@ class MessageHandler {
     }
 
     parse0 = (data) => {
-        console.log("sending unplugged event")
+        console.log("received 0 event")
+        console.log(data)
         this.quit()
         this.update(0)
     }
