@@ -28,6 +28,22 @@ class DongleHandler extends EventEmitter {
         this._audioParser = new AudioParser(this.updateState)
         this._messageHandler = new MessageHandler(this.updateState, this.setPlugged, this.quit)
         this.plugged = false;
+        this._keys = {
+            invalid: 0, //'invalid',
+            siri: 5, //'Siri Button',
+            mic: 6, //'Car Microphone',
+            left: 100, //'Button Left',
+            right: 101, //'Button Right',
+            selectUp: 104, //'Button Select Down',
+            selectDown: 105, //'Button Select Up',
+            back: 106, //'Button Back',
+            up: 114, //'Button Down',
+            down: 200, //'Button Home',
+            play: 201, //'Button Play',
+            pause: 202, //'Button Pause',
+            next: 204, //'Button Next Track',
+            prev: 205 //'Button Prev Track',
+        }
         if(this.getDevice()) {
             console.log("device connected and ready")
         } else {
@@ -246,6 +262,12 @@ class DongleHandler extends EventEmitter {
         let msgType = 170;
         let message = Buffer.from('', 'ascii')
         this.serialise(message, msgType)
+    }
+
+    sendKey = (action) => {
+        let msg = Buffer.alloc(4)
+        msg.writeUInt32LE(this._keys[action])
+        this.serialise(msg, 8)
     }
 }
 

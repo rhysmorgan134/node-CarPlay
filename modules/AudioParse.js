@@ -7,8 +7,8 @@ class AudioParse extends EventEmitter{
         super();
         this._parser = spawn('ffplay', [
             "-hide_banner",
-	    "-loglevel", "error",
-	    "-",
+            "-loglevel", "error",
+            "-",
             "-f", "s16le",
             "-ac", "2",
             "-ar", `44100`,
@@ -19,6 +19,10 @@ class AudioParse extends EventEmitter{
 
         this._parser.stdout.on('data', ((data) => {
             //console.log(data.toString())
+        }))
+
+        this._parser.stdout.on('error', ((data) => {
+            console.log(data.toString())
         }))
 
         this._parser.stdout.pipe(process.stdout)
@@ -41,6 +45,10 @@ class AudioParse extends EventEmitter{
 
         this._parser2.stdout.on('data', ((data) => {
             //console.log(data.toString())
+        }))
+
+        this._parser2.stdout.on('error', ((data) => {
+            console.log(data.toString())
         }))
 
         this._parser2.stdout.pipe(process.stdout)
@@ -94,7 +102,7 @@ class AudioParse extends EventEmitter{
 		   this._navi = false
 		   this._naviPendingStop = false
 		} else {
-		   console.log("unknown type: ", type, this._naviPendingStop)
+		   console.log("unknown type: ", type, this._naviPendingStop, this._navi)
 		}
         	this._bytesToRead = 0;
         	this._bytesRead = [];

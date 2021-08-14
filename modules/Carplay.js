@@ -41,6 +41,10 @@ class Carplay extends EventEmitter {
         return this._dongle.getPlugged()
     }
 
+    sendKey = (action) => {
+        this._dongle.sendKey(action)
+    }
+
 
 }
 
