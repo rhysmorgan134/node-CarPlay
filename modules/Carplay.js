@@ -7,12 +7,12 @@ const DongleHandler = require('./DongleHandler')
 
 class Carplay extends EventEmitter {
 
-    constructor(config) {
+    constructor(config,reader) {
         super()
         this._width = config.width;
         this._height = config.height;
         this.getAssets()
-        this._dongle = new DongleHandler(config)
+        this._dongle = new DongleHandler(config, reader)
         this._dongle.on('status', (data) => {
             this.emit('status', data)
         })
@@ -21,7 +21,7 @@ class Carplay extends EventEmitter {
 	})
     }
 
-    sendTouch = (type, x, y) => {
+    sendTouch = async (type, x, y) => {
         this._dongle.sendTouch(type, x, y)
     }
 

@@ -3,44 +3,28 @@ const spawn = require('child_process').spawn;
 const { Readable } = require('stream');
 
 class VideoParseWS extends EventEmitter{
-    constructor(width, height, bitrate, ws, updateState) {
+    constructor(width, height, bitrate, ws, updateState, reader) {
         super();
-        this._parser = spawn('ffmpeg', [
-	    "-hide_banner",
-	    "-loglevel", "error",
-            "-threads", "2",
-            "-i", "-",
-	    "-c:v", "h264_v4l2m2m",
-	    "-tune", "zerolatency",
-            "-pix_fmt", "yuv420p",
-            "-f", "mpegts",
-            "-codec:v", "mpeg1video",
-            "-s", `${width}x${height}`,
-            "-b:v", bitrate.toString() + "k",
-            "-bf", "0",
-            ws])
-         this._parser.stderr.on('data', ((data) => {
-             console.log(data.toString())
-         }))
-        
-         this._parser.stdout.on('data', ((data) => {
-             console.log(data.toString())
-         }))
-        
-         this._parser.stdout.pipe(process.stdout)
+        this.reader = reader
+
 
         this._readable = new Readable(1024);
         this._readable._read = () => {
-            this._readable.pipe(this._parser.stdin)
+
         }
         this.updateState = updateState;
         this._bytesToRead = 0;
         this._bytesRead = [];
         this._bytesSize = 0;
+        this.storedBytes = 0
+        this.chunks = []
+        this.duration = 0
+        this.date;
     }
 
     setActive = (bytesToRead) => {
         this._bytesToRead = bytesToRead;
+
         this.updateState(6)
     }
 
@@ -48,22 +32,36 @@ class VideoParseWS extends EventEmitter{
         this._bytesRead.push(bytes)
         this._bytesSize += Buffer.byteLength(bytes)
         if(this._bytesSize === this._bytesToRead) {
+            if(this.testTime) {
+                this.duration = 0// new Date().getTime() - this.testTime
+                this.testTime = new Date().getTime()
+            } else {
+                this.duration = 0
+                this.testTime = new Date().getTime()
+            }
             this.pipeData()
         }
     }
 
     pipeData = () => {
+
         let fullData = Buffer.concat(this._bytesRead)
         let outputData = fullData.slice(20, this._bytesToRead)
-        if(this._parser.stdin.writable) {
-            this._parser.stdin.write(outputData)
-        } else {
-            this.emit('warning', 'Video Stream Full')
+        this.chunks.push(outputData)
+        if(this.chunks.length ===1) {
+            let durationBuffer = Buffer.alloc(4)
+            durationBuffer.writeInt32BE(this.duration )
+            this.chunks.unshift(durationBuffer)
+            this.reader.push(Buffer.concat(this.chunks))
+            this.chunks = []
+            this.duration = 0
+            //this.testTime = new Date().getTime()
         }
         this._bytesToRead = 0;
         this._bytesRead = [];
         this._bytesSize = 0;
         this.updateState(0);
+
     }
 }
 

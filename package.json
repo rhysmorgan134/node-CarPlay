@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/rhysmorgan134/node-CarPlay#readme",
   "dependencies": {
-    "usb": "^1.7.1"
+    "usb": "~1.7.1"
   }
 }

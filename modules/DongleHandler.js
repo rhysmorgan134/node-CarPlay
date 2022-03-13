@@ -6,7 +6,7 @@ const AudioParser = require('./AudioParse')
 const MessageHandler = require('./MessageHandler')
 
 class DongleHandler extends EventEmitter {
-    constructor({dpi=160, nightMode=0, hand=0, boxName="nodePlay", width=800, height=640, fps=20}) {
+    constructor({dpi=160, nightMode=0, hand=0, boxName="nodePlay", width=800, height=640, fps=20},reader) {
         super();
         this._usb = usb;
         this._dpi = dpi;
@@ -24,10 +24,12 @@ class DongleHandler extends EventEmitter {
         this._interface = null;
         this._inEP = null;
         this._outEP = null;
-        this._videoParser = new VideoParser(this._width, this._height, 2000, "http://localhost:8081/supersecret", this.updateState)
+        this._videoParser = new VideoParser(this._width, this._height, 2000, "http://localhost:8081/supersecret", this.updateState, reader)
         this._audioParser = new AudioParser(this.updateState)
         this._messageHandler = new MessageHandler(this.updateState, this.setPlugged, this.quit)
         this.plugged = false;
+        this.time;
+        this.lag = 0;
         this._keys = {
             invalid: 0, //'invalid',
             siri: 5, //'Siri Button',
@@ -50,7 +52,18 @@ class DongleHandler extends EventEmitter {
             console.log("device not connected")
         }
 
+        this.measureLag(1)
 
+
+    }
+
+    measureLag(iteration) {
+        const start = new Date()
+        setTimeout(() => {
+            this.lag = new Date() - start
+            //console.log("lag was: ", this.lag)
+            this.measureLag(iteration + 1) // Recurse
+        })
     }
 
     getDevice = () => {
@@ -215,7 +228,15 @@ class DongleHandler extends EventEmitter {
         if(this._state ===0) {
             if((Buffer.compare(this._magicBuff, header)) === 0) {
                 let type = data[8]
+                let duration = 0
                 if(type === 6) {
+                    // if(!(this.time)) {
+                    //     this.time = new Date().getTime()
+                    // } else {
+                    //     let now = new Date().getTime()
+                    //     duration = (now - this.time)// + this.lag
+                    //     this.time = now
+                    // }
                     let length = data.readUInt32LE(4)
                     this._videoParser.setActive(length)
                 } else if (type ===7) {
