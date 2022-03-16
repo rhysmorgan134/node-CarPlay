@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/rhysmorgan134/node-CarPlay#readme",
   "dependencies": {
-    "node-microphone": "^0.1.5",
+    "node-microphone": "https://github.com/rhysmorgan134/node-microphone.git",
     "usb": "~1.7.1"
   }
 }
