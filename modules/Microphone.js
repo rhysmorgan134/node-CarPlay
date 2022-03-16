@@ -39,6 +39,10 @@ class Microphone extends EventEmitter {
         return this.active
     }
 
+    set active(value) {
+        this.active=value
+    }
+
 }
 
 module.exports = Microphone
