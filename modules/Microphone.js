@@ -5,8 +5,8 @@ class Microphone extends EventEmitter {
     constructor(props) {
         super();
         this.mic = new Mic()
-        this.active = false
-        this.mic.pipe.on('data', (data) => {
+        this._active = false
+        this.mic.on('data', (data) => {
             this.emit('data', data)
         })
         this.mic.on('info', (info) => {
@@ -24,23 +24,24 @@ class Microphone extends EventEmitter {
 
         console.log("starting mic")
         this.mic.startRecording()
-        this.active = true
+        this._active = true
         this.timeout = setTimeout(() => {
             this.stop()
         }, 10000)
     }
 
     stop() {
-        this.active = false
+        this._active = false
+        clearTimeout(this.timeout)
         this.mic.stopRecording()
     }
 
     get active() {
-        return this.active
+        return this._active
     }
 
     set active(value) {
-        this.active=value
+        this._active=value
     }
 
 }

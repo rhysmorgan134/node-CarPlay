@@ -3,7 +3,7 @@ const spawn = require('child_process').spawn;
 const { Readable } = require('stream');
 
 class AudioParse extends EventEmitter{
-    constructor(updateState) {
+    constructor(updateState, mic) {
         super();
         this._parser = spawn('ffplay', [
             "-hide_banner",
@@ -26,7 +26,7 @@ class AudioParse extends EventEmitter{
         }))
 
         this._parser.stdout.pipe(process.stdout)
-
+        this._mic = mic
         this._readable = new Readable(1024);
         this._readable._read = () => {
             this._readable.pipe(this._parser.stdin)
@@ -101,7 +101,11 @@ class AudioParse extends EventEmitter{
 		   console.log("setting audio to media now")
 		   this._navi = false
 		   this._naviPendingStop = false
-		} else {
+		} else if(type === 8) {
+		    this._mic.start()
+        } else if (type === 9) {
+		    this._mic.stop()
+        } else {
 		   console.log("unknown type: ", type, this._naviPendingStop, this._navi)
 		}
         	this._bytesToRead = 0;
