@@ -34,7 +34,7 @@ class DongleHandler extends EventEmitter {
                 let audioData = Buffer.alloc(12)
                 audioData.writeUInt32LE(5, 0)
                 audioData.writeFloatLE(0.0, 4)
-                audioData.writeUInt32LE(3, 0)
+                audioData.writeUInt32LE(3, 8)
                 this.serialise(Buffer.concat([audioData, data]), 7)
             }
         })
