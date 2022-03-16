@@ -4,6 +4,7 @@ const EventEmitter = require('events');
 const VideoParser = require('./VideoParseWS')
 const AudioParser = require('./AudioParse')
 const MessageHandler = require('./MessageHandler')
+const Microphone = require('./Microphone')
 
 class DongleHandler extends EventEmitter {
     constructor({dpi=160, nightMode=0, hand=0, boxName="nodePlay", width=800, height=640, fps=20},reader) {
@@ -27,6 +28,16 @@ class DongleHandler extends EventEmitter {
         this._videoParser = new VideoParser(this._width, this._height, 2000, "http://localhost:8081/supersecret", this.updateState, reader)
         this._audioParser = new AudioParser(this.updateState)
         this._messageHandler = new MessageHandler(this.updateState, this.setPlugged, this.quit)
+        this._mic = new Microphone()
+        this._mic.on('data', (data) => {
+            if(this._mic.active) {
+                let audioData = Buffer.alloc(12)
+                audioData.writeUInt32LE(5, 0)
+                audioData.writeFloatLE(0.0, 4)
+                audioData.writeUInt32LE(3, 0)
+                this.serialise(Buffer.concat([audioData, data]), 7)
+            }
+        })
         this.plugged = false;
         this.time;
         this.lag = 0;
@@ -244,8 +255,8 @@ class DongleHandler extends EventEmitter {
                     if(length > 0) {
                         this._audioParser.setActive(length)
                     } else {
-			console.log(data)
-		    }
+
+                        }
                 } else {
                     let length = data.readUInt32LE(4)
                     this._messageHandler.parseHeader(type, length, data)
@@ -255,6 +266,10 @@ class DongleHandler extends EventEmitter {
             this._videoParser.addBytes(data)
         } else if(this._state === 7) {
             this._audioParser.addBytes(data)
+        } else if(this._state === 8) {
+            this._mic.start()
+        } else if (this._state === 9) {
+            this._mic.stop()
         } else {
             this._messageHandler.parseData(data)
         }
