@@ -152,6 +152,14 @@ class DongleHandler extends EventEmitter {
         await this.sendString(this._boxName, "/etc/box_name");
         await this.sendKey('wifiEn')
         await this.sendKey('wifiConnect')
+        setTimeout(() => {
+            console.log("enabling wifi")
+            this.sendKey('wifiEnd')
+            setTimeout(() => {
+                console.log("auto connecting")
+                this.sendKey('wifiConnect')
+            },1000)
+        }, 2000)
         this.pairTimeout = setTimeout(() => this.sendKey("wifiPair"), 15000)
 
         setInterval(() => {
