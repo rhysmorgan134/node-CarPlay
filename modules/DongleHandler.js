@@ -40,6 +40,8 @@ class DongleHandler extends EventEmitter {
         })
         this.plugged = false;
         this.time;
+        this.enablePair = false;
+        this.pairTimeout;
         this.lag = 0;
         this._keys = {
             invalid: 0, //'invalid',
@@ -55,7 +57,10 @@ class DongleHandler extends EventEmitter {
             play: 201, //'Button Play',
             pause: 202, //'Button Pause',
             next: 204, //'Button Next Track',
-            prev: 205 //'Button Prev Track',
+            prev: 205, //'Button Prev Track',
+            wifiEn: 1000,
+            wifiPair: 1012,
+            wifiConnect: 1002
         }
         if(this.getDevice()) {
             console.log("device connected and ready")
@@ -145,6 +150,20 @@ class DongleHandler extends EventEmitter {
         await this.sendInt(0, "/tmp/hand_drive_mode");
         await this.sendInt(0, "/tmp/charge_mode");
         await this.sendString(this._boxName, "/etc/box_name");
+        await this.sendKey('wifiEn')
+        await this.sendKey('wifiConnect')
+        setTimeout(() => {
+            console.log("enabling wifi")
+            this.sendKey('wifiEnd')
+            setTimeout(() => {
+                console.log("auto connecting")
+                this.sendKey('wifiConnect')
+            },1000)
+        }, 2000)
+        this.pairTimeout = setTimeout(() => {
+            console.log("no device, sending pair")
+            this.sendKey("wifiPair")
+        }, 15000)
 
         setInterval(() => {
             this.heartBeat()
@@ -173,6 +192,7 @@ class DongleHandler extends EventEmitter {
 
     setPlugged = (state) => {
         this.plugged = state;
+        clearTimeout(this.pairTimeout)
         this.emit("status", {status: this.plugged})
     }
 
