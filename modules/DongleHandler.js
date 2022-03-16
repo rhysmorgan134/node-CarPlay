@@ -160,7 +160,10 @@ class DongleHandler extends EventEmitter {
                 this.sendKey('wifiConnect')
             },1000)
         }, 2000)
-        this.pairTimeout = setTimeout(() => this.sendKey("wifiPair"), 15000)
+        this.pairTimeout = setTimeout(() => {
+            console.log("no device, sending pair")
+            this.sendKey("wifiPair")
+        }, 15000)
 
         setInterval(() => {
             this.heartBeat()
@@ -189,6 +192,7 @@ class DongleHandler extends EventEmitter {
 
     setPlugged = (state) => {
         this.plugged = state;
+        clearTimeout(this.pairTimeout)
         this.emit("status", {status: this.plugged})
     }
 
