@@ -49,6 +49,7 @@ class DongleHandler extends EventEmitter {
             mic: 7, //'Car Microphone',
             left: 100, //'Button Left',
             right: 101, //'Button Right',
+            frame: 12,
             selectDown: 104, //'Button Select Down',
             selectUp: 105, //'Button Select Up',
             back: 106, //'Button Back',
@@ -68,7 +69,14 @@ class DongleHandler extends EventEmitter {
             console.log("device not connected")
         }
 
-        this.measureLag(1)
+        setTimeout(() => {
+            setInterval(() => {
+                if(this.plugged) {
+                    console.log('requesting key frame')
+                    this.sendKey('frame')
+                }
+            }, 1000)
+        }, 15000)
 
 
     }
@@ -148,7 +156,7 @@ class DongleHandler extends EventEmitter {
 
         await this.sendInt(0, "/tmp/night_mode");
         await this.sendInt(0, "/tmp/hand_drive_mode");
-        await this.sendInt(0, "/tmp/charge_mode");
+        await this.sendInt(1, "/tmp/charge_mode");
         await this.sendString(this._boxName, "/etc/box_name");
         await this.sendKey('wifiEn')
         await this.sendKey('wifiConnect')

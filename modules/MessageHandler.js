@@ -107,6 +107,9 @@ class MessageHandler {
         if(!(value[message])) {
             console.log("test message", data.toString('ascii'))
         }
+        if(data.readUInt32LE() === 3) {
+            this.quit()
+        }
         this.update(0)
     }
 
@@ -152,7 +155,6 @@ class MessageHandler {
     parse0 = (data) => {
         console.log("received 0 event")
         console.log(data)
-        this.quit()
         this.update(0)
     }
 }
