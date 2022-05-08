@@ -6,7 +6,7 @@
 </p>
 
     
-
+<a href="https://www.buymeacoffee.com/rhysm" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>   
 
 
 <!-- TABLE OF CONTENTS -->
@@ -85,10 +85,10 @@ TODO see [react-carplay](https://github.com/rhysmorgan134/react-carplay)
 <!-- ROADMAP -->
 ## Roadmap
 
-* Enabled hardware accelleration
-* Replace jsmpeg with lighter alternative
-* Make wireless operational
-* Integrate microphone
+* - [ ] Enabled hardware accelleration
+* - [x] Replace jsmpeg with lighter alternative
+* - [x] Make wireless operational
+* - [x] Integrate microphone
 
 
 <!-- CONTRIBUTING -->
