@@ -91,8 +91,13 @@ class DongleHandler extends EventEmitter {
     }
 
     getDevice = () => {
-        if(usb.findByIds(0x1314, 0x1520)) {
-            this._device = usb.findByIds(0x1314, 0x1520);
+        let device = usb.findByIds(0x1314, 0x1520);
+        if (!device) {
+            device = usb.findByIds(0x1314, 0x1521);
+        }
+
+        if (device) {
+            this._device = device;
             this._device.open();
             this._device.reset(() => {})
             this._interface = this._device.interface(0);
