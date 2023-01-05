@@ -72,7 +72,6 @@ class DongleHandler extends EventEmitter {
         setTimeout(() => {
             setInterval(() => {
                 if(this.plugged) {
-                    console.log('requesting key frame')
                     this.sendKey('frame')
                 }
             }, 1000)
@@ -151,6 +150,7 @@ class DongleHandler extends EventEmitter {
     }
 
     startUp = async () => {
+        console.log("sending dpi")
         await this.sendInt(this._dpi, "/tmp/screen_dpi")
 
         for(let i=0; i<this._assets.length;i++) {
@@ -192,7 +192,7 @@ class DongleHandler extends EventEmitter {
         let fps = Buffer.alloc(4)
         fps.writeUInt32LE(this._fps)
         let format = Buffer.alloc(4)
-        format.writeUInt32LE(5)
+        format.writeUInt32LE(2)
         let packetMax = Buffer.alloc(4)
         packetMax.writeUInt32LE(49125)
         let iBox = Buffer.alloc(4)
@@ -268,6 +268,7 @@ class DongleHandler extends EventEmitter {
     }
 
     deSerialise = (data) => {
+        //console.log(data)
         let header = data.slice(0, 4)
         if(this._state ===0) {
             if((Buffer.compare(this._magicBuff, header)) === 0) {
