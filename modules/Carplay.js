@@ -1,23 +1,30 @@
-const usb = require('usb');
 const fs = require('fs');
 const EventEmitter = require('events');
-const {spawn, execSync} = require('child_process');
-const { Readable, Transform } = require('stream');
+const {execSync} = require('child_process');
 const DongleHandler = require('./DongleHandler')
+const {Server} = require("socket.io")
+
+const io = new Server(5005, {
+    cors: {
+        origin: '*',
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+})
 
 class Carplay extends EventEmitter {
 
-    constructor(config,reader) {
+    constructor(config) {
         super()
         this._width = config.width;
         this._height = config.height;
         this.getAssets()
-        this._dongle = new DongleHandler(config, reader)
+        this._dongle = new DongleHandler(config, this.sendVideoData, this.sendAudioData)
         this._dongle.on('status', (data) => {
-            this.emit('status', data)
+            io.emit('status', data)
         })
 	this._dongle.on('quit', () => {
-	   this.emit('quit');
+	   io.emit('quit');
 	})
     }
 
@@ -43,6 +50,14 @@ class Carplay extends EventEmitter {
 
     sendKey = (action) => {
         this._dongle.sendKey(action)
+    }
+
+    sendVideoData = (data) => {
+        io.emit('carplay', data)
+    }
+
+    sendAudioData = (data) => {
+            io.emit('audio', data)
     }
 
 

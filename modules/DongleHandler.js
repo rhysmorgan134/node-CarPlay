@@ -7,7 +7,7 @@ const MessageHandler = require('./MessageHandler')
 const Microphone = require('./Microphone')
 
 class DongleHandler extends EventEmitter {
-    constructor({dpi=160, nightMode=0, hand=0, boxName="nodePlay", width=800, height=640, fps=20},reader) {
+    constructor({dpi=160, nightMode=0, hand=0, boxName="nodePlay", width=800, height=640, fps=20}, videoData, audioData) {
         super();
         this._usb = usb;
         this._dpi = dpi;
@@ -26,8 +26,8 @@ class DongleHandler extends EventEmitter {
         this._inEP = null;
         this._outEP = null;
         this._mic = new Microphone()
-        this._videoParser = new VideoParser(this._width, this._height, 2000, "http://localhost:8081/supersecret", this.updateState, reader)
-        this._audioParser = new AudioParser(this.updateState, this._mic)
+        this._videoParser = new VideoParser(this._width, this._height, 2000, "http://localhost:8081/supersecret", this.updateState, videoData)
+        this._audioParser = new AudioParser(this.updateState, this._mic, audioData)
         this._messageHandler = new MessageHandler(this.updateState, this.setPlugged, this.quit)
         this._mic.on('data', (data) => {
             if(this._mic.active) {

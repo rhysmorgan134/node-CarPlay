@@ -3,15 +3,9 @@ const spawn = require('child_process').spawn;
 const { Readable } = require('stream');
 
 class VideoParseWS extends EventEmitter{
-    constructor(width, height, bitrate, ws, updateState, reader) {
+    constructor(width, height, bitrate, ws, updateState, videoData) {
         super();
-        this.reader = reader
-
-
-        this._readable = new Readable(1024);
-        this._readable._read = () => {
-
-        }
+        this.videoData = videoData
         this.updateState = updateState;
         this._bytesToRead = 0;
         this._bytesRead = [];
@@ -52,7 +46,7 @@ class VideoParseWS extends EventEmitter{
             let durationBuffer = Buffer.alloc(4)
             durationBuffer.writeInt32BE(this.duration )
             this.chunks.unshift(durationBuffer)
-            this.reader.push(Buffer.concat(this.chunks))
+            this.videoData(Buffer.concat(this.chunks))
             this.chunks = []
             this.duration = 0
             //this.testTime = new Date().getTime()

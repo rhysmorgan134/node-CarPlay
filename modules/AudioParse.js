@@ -1,70 +1,12 @@
 const EventEmitter = require('events');
 const spawn = require('child_process').spawn;
-const {Readable} = require('stream');
 
 class AudioParse extends EventEmitter {
-    constructor(updateState, mic) {
+    constructor(updateState, mic, audioData) {
         super();
-        this._parsers = {
-            1: spawn('ffplay', [
-                "-hide_banner",
-                "-loglevel", "error",
-                "-",
-                "-f", "s16le",
-                "-ac", "2",
-                "-ar", `44100`,
-                "-nodisp"]),
-            2: spawn('ffplay', [
-                "-hide_banner",
-                "-loglevel", "error",
-                "-",
-                "-f", "s16le",
-                "-ac", "2",
-                "-ar", `44100`,
-                "-nodisp"]),
-            3: spawn('ffplay', [
-                "-hide_banner",
-                "-loglevel", "error",
-                "-",
-                "-f", "s16le",
-                "-ac", "1",
-                "-ar", `8000`,
-                "-nodisp"]),
-            4: spawn('ffplay', [
-                "-hide_banner",
-                "-loglevel", "error",
-                "-",
-                "-f", "s16le",
-                "-ac", "2",
-                "-ar", `48000`,
-                "-nodisp"]),
-            5: spawn('ffplay', [
-                "-hide_banner",
-                "-loglevel", "error",
-                "-",
-                "-f", "s16le",
-                "-ac", "1",
-                "-ar", `16000`,
-                "-nodisp"]),
-            6: spawn('ffplay', [
-                "-hide_banner",
-                "-loglevel", "error",
-                "-",
-                "-f", "s16le",
-                "-ac", "1",
-                "-ar", `24000`,
-                "-nodisp"]),
-            7: spawn('ffplay', [
-                "-hide_banner",
-                "-loglevel", "error",
-                "-",
-                "-f", "s16le",
-                "-ac", "2",
-                "-ar", `16000`,
-                "-nodisp"])
-        }
         this._mic = mic
         this.updateState = updateState;
+        this.audioData = audioData
         this._bytesToRead = 0;
         this._bytesRead = [];
         this._bytesSize = 0;
@@ -72,15 +14,7 @@ class AudioParse extends EventEmitter {
         this._navi = false;
         this._audioType = 1;
         this._naviPendingStop = false;
-        process.on('SIGABRT', () => {
-            this.quit()
-        })
-        process.on('SIGINT', () => {
-            this.quit()
-        })
-        process.on('SIGTERM', () => {
-            this.quit()
-        })
+        this.type= null;
     }
 
     setActive = (bytesToRead) => {
@@ -101,12 +35,14 @@ class AudioParse extends EventEmitter {
         this._bytesRead.push(bytes)
         this._bytesSize += Buffer.byteLength(bytes)
         //console.log(this._bytesSize, this._bytesToRead)
+        let type
         if (this._bytesSize === this._bytesToRead) {
             if (this._audioParse) {
                 this.pipeData()
             } else {
-                let type = Buffer.concat(this._bytesRead)
+                type = Buffer.concat(this._bytesRead)
                 type = type.readInt8(12)
+                this.type = type
                 if (type === 6) {
                     console.log("setting audio to nav")
                     this._navi = true
@@ -137,43 +73,12 @@ class AudioParse extends EventEmitter {
         let volume = fullData.readFloatLE(4)
         let audioType = fullData.readUInt32LE(8)
         let outputData = fullData.slice(12, this._bytesToRead)
-        // if(volume) {
-        //outputData = this.lowerVolume(outputData)
-        // }
-        if(this._navi === true) {
-            if(decodeType == 2) {
-                this._parsers[decodeType].stdin.write(outputData)
-            }
-        } else {
-            this._parsers[decodeType].stdin.write(outputData)
-        }
+        this.audioData({type: this.type, decode: decodeType, volume: volume, audioType: audioType, data: outputData})
 
         this._bytesToRead = 0;
         this._bytesRead = [];
         this._bytesSize = 0;
         this.updateState(0);
-    }
-
-    lowerVolume = (bytes) => {
-        console.log("before Convert", bytes)
-        let bytesToReturn = []
-        for(let i=0;i<bytes.length;i+=2) {
-            let data = (bytes.readUInt8(i)) * 0.9
-            let data2 = (bytes.readUInt8(i+1)) * 0.9
-            bytesToReturn.push(data)
-            bytesToReturn.push(data2)
-
-        }
-        console.log("after", Buffer.from(bytesToReturn))
-        return Buffer.from(bytesToReturn)
-    }
-
-    quit = () => {
-        Object.keys(this._parsers).forEach((key) => {
-            console.log("killing ffplay: ", key)
-            this._parsers[key].kill("SIGINT")
-        })
-        process.exit()
     }
 }
 
