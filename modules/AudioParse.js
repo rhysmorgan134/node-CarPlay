@@ -53,9 +53,9 @@ class AudioParse extends EventEmitter {
                     console.log("setting audio to media now")
                     this._navi = false
                     this._naviPendingStop = false
-                } else if (type === 8) {
+                } else if (type === 8 || type===4) {
                     this._mic.start()
-                } else if (type === 9) {
+                } else if (type === 9 || type===5) {
                     this._mic.stop()
                 } else {
                     console.log("unknown audio type: ", type, this._naviPendingStop, this._navi)
@@ -67,7 +67,7 @@ class AudioParse extends EventEmitter {
             }
         }
     }
-    pipeData = () => {
+    pipeData = async() => {
         let fullData = Buffer.concat(this._bytesRead)
         let decodeType = fullData.readUInt32LE(0)
         let volume = fullData.readFloatLE(4)

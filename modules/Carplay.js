@@ -23,9 +23,19 @@ class Carplay extends EventEmitter {
         this._dongle.on('status', (data) => {
             io.emit('status', data)
         })
-	this._dongle.on('quit', () => {
-	   io.emit('quit');
-	})
+        this._dongle.on('quit', () => {
+            io.emit('quit');
+        })
+        io.on('connection', (socket)=> {
+            console.log("carplay connection")
+            socket.on('statusReq', () => {
+                console.log('status request')
+                socket.emit('status', {status: this._dongle.getPlugged()})
+            })
+            socket.on('click', ({type, x, y}) => {
+                this.sendTouch(type, x, y)
+            })
+        })
     }
 
     sendTouch = async (type, x, y) => {
@@ -57,7 +67,7 @@ class Carplay extends EventEmitter {
     }
 
     sendAudioData = (data) => {
-            io.emit('audio', data)
+        io.emit('audio', data)
     }
 
 
