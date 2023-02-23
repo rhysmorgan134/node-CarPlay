@@ -19,7 +19,7 @@ class Carplay extends EventEmitter {
         this._width = config.width;
         this._height = config.height;
         this.getAssets()
-        this._dongle = new DongleHandler(config, this.sendVideoData, this.sendAudioData)
+        this._dongle = new DongleHandler(config, this.sendVideoData, this.sendAudioData, this.sendMediaData)
         this._dongle.on('status', (data) => {
             io.emit('status', data)
         })
@@ -68,6 +68,10 @@ class Carplay extends EventEmitter {
 
     sendAudioData = (data) => {
         io.emit('audio', data)
+    }
+
+    sendMediaData = (data) => {
+        io.emit('media', data)
     }
 
 

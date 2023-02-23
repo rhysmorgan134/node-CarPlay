@@ -3,11 +3,12 @@ const usb = require('usb');
 const EventEmitter = require('events');
 const VideoParser = require('./VideoParseWS')
 const AudioParser = require('./AudioParse')
+const MediaParse = require('./MediaParse')
 const MessageHandler = require('./MessageHandler')
 const Microphone = require('./Microphone')
 
 class DongleHandler extends EventEmitter {
-    constructor({dpi=160, nightMode=0, hand=0, boxName="nodePlay", width=800, height=640, fps=20}, videoData, audioData) {
+    constructor({dpi=160, nightMode=0, hand=0, boxName="nodePlay", width=800, height=640, fps=20}, videoData, audioData, mediaData) {
         super();
         this._usb = usb;
         this._dpi = dpi;
@@ -28,6 +29,7 @@ class DongleHandler extends EventEmitter {
         this._mic = new Microphone()
         this._videoParser = new VideoParser(this._width, this._height, 2000, "http://localhost:8081/supersecret", this.updateState, videoData)
         this._audioParser = new AudioParser(this.updateState, this._mic, audioData)
+        this._mediaParser = new MediaParse(this.updateState, mediaData)
         this._messageHandler = new MessageHandler(this.updateState, this.setPlugged, this.quit)
         this._mic.on('data', (data) => {
             if(this._mic.active) {
@@ -291,6 +293,9 @@ class DongleHandler extends EventEmitter {
                     } else {
 
                         }
+                } else if (type === 42) {
+                    let length = data.readUInt32LE(4)
+                    this._mediaParser.setActive(length)
                 } else {
                     let length = data.readUInt32LE(4)
                     this._messageHandler.parseHeader(type, length, data)
@@ -300,6 +305,8 @@ class DongleHandler extends EventEmitter {
             this._videoParser.addBytes(data)
         } else if(this._state === 7) {
             this._audioParser.addBytes(data)
+        } else if(this._state === 42) {
+            this._mediaParser.addBytes(data)
         } else {
             this._messageHandler.parseData(data)
         }
