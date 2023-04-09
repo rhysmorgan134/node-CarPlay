@@ -19,6 +19,6 @@
   "dependencies": {
     "node-microphone": "https://github.com/rhysmorgan134/node-microphone.git",
     "socket.io": "^4.5.4",
-    "usb": "~1.9.2"
+    "usb": "^2.9.0"
   }
 }
