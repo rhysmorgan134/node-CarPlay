@@ -1,6 +1,6 @@
 {
   "name": "node-carplay",
-  "version": "3.0.5",
+  "version": "3.0.9",
   "description": "",
   "main": "index.js",
   "scripts": {

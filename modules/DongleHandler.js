@@ -143,32 +143,39 @@ class DongleHandler extends EventEmitter {
 
     if (device) {
       this._device = device;
+      console.log("opening")
       this._device.open();
-      this._device.reset(() => {});
-      this._interface = this._device.interface(0);
-      this._interface.claim();
-      this._inEP = this._interface.endpoints[0];
-      this._outEP = this._interface.endpoints[1];
-      this._inEP.clearHalt((err) => {
-        if (err) {
-          console.log("Error clearing inendpoint halt");
-          return false;
-        } else {
-          this._inEP.startPoll();
-        }
+      this._device.reset(() => {
+        console.log("getting interface")
+
+        this._interface = this._device.interface(0);
+        console.log("claiming")
+        this._interface.claim();
+        this._inEP = this._interface.endpoints[0];
+        this._outEP = this._interface.endpoints[1];
+        this._inEP.clearHalt((err) => {
+          if (err) {
+            console.log("Error clearing inendpoint halt");
+            return false;
+          } else {
+            console.log("Cleared halt")
+          }
+          this._outEP.clearHalt((err) => {
+            if (err) {
+              console.log("Error clearing outendpoint halt");
+              return false;
+            } else {
+              this._inEP.startPoll();
+              console.log(this._device)
+              this._inEP.on("data", (data) => {
+                this.deSerialise(data);
+              });
+              this.startUp();
+              return true;
+            }
+          });
+        });
       });
-      this._outEP.clearHalt((err) => {
-        if (err) {
-          console.log("Error clearing outendpoint halt");
-          return false;
-        } else {
-        }
-      });
-      this._inEP.on("data", (data) => {
-        this.deSerialise(data);
-      });
-      this.startUp();
-      return true;
     } else {
       setTimeout(this.getDevice, 2000);
       return false;
