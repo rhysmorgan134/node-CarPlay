@@ -20,7 +20,7 @@ const settings: DongleConfig = {
   boxName: 'nodePlay',
   width: 1280,
   height: 480,
-  fps: 30,
+  fps: 60,
 }
 
 function App() {
