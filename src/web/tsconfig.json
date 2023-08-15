@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES6",
+    "lib": ["es2019", "DOM"]
+  },
+  "exclude": ["../node/*"]
+}
