@@ -7,7 +7,6 @@
     "./dist/web": "./dist/web/index.js"
   },
   "scripts": {
-    "setup": "ts-node ./scripts/setup.ts",
     "start:node": "ts-node ./scripts/startNode.ts",
     "test": "jest",
     "build:node": "tsc --build",
