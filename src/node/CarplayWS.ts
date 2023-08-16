@@ -75,7 +75,7 @@ export default class CarplayWS {
       socket.on(
         'click',
         ({ type, x, y }: { type: number; x: number; y: number }) => {
-          this._dongleDriver.send(new SendTouch(x, y, type, config))
+          this._dongleDriver.send(new SendTouch(x, y, type))
         },
       )
     })

@@ -53,20 +53,22 @@ function App() {
     const cp = carplayRef.current
 
     cp.on('audio', (audio: AudioData) => {
-      if (audio.data && audio.format){
+      if (audio.data && audio.format) {
 
-        if(audio.volume) {
+        const { format, volume, data: { buffer: audioData } } = audio
+
+        if(volume) {
           gainNode.gain.value = audio.volume
         }
 
-        const data = new Float32Array(new Int16Array(audio.data)).map(
+        const data = new Float32Array(new Int16Array(audioData)).map(
           (d) => d / 32768
-        );
-        const sampleRate = audio.format.frequency
-        const channels = audio.format.channel
+        )
+        const sampleRate = format.frequency
+        const channels = format.channel
         const audioBuffer = context.createBuffer(
           channels,
-          audio.data.length / channels,
+          data.length / channels,
           sampleRate
         );
   
@@ -144,7 +146,7 @@ function App() {
     }
   }, [requestDevice, start])
 
-  const sendTouchEvent: React.PointerEventHandler<HTMLVideoElement> = useCallback((e) => {
+  const sendTouchEvent: React.PointerEventHandler<HTMLDivElement> = useCallback((e) => {
     let action = TouchAction.Up;
     if (e.type === "pointerdown") {
       action = TouchAction.Down;
@@ -166,10 +168,8 @@ function App() {
     }
 
     const { offsetX, offsetY } = e.nativeEvent
-    send(new SendTouch(offsetX, offsetY, action, settings))
+    send(new SendTouch(offsetX / settings.width, offsetY / settings.height, action))
   }, [pointerdown, send]);
-
-  const isLoading = !isPlugged && !requiresPermissions
 
   return (
     <div style={{height: '100%'}}  id={'main'} className="App">
@@ -181,15 +181,15 @@ function App() {
         </button>}
       <div
         id="videoContainer" 
+        onPointerDown={sendTouchEvent}
+        onPointerMove={sendTouchEvent}
+        onPointerUp={sendTouchEvent}
+        onPointerCancel={sendTouchEvent}
+        onPointerOut={sendTouchEvent}
         style={{height: '100%', width: '100%', padding: 0, margin: 0, display: 'flex'}}>
         <video
-          onPointerDown={sendTouchEvent}
-          onPointerMove={sendTouchEvent}
-          onPointerUp={sendTouchEvent}
-          onPointerCancel={sendTouchEvent}
-          onPointerOut={sendTouchEvent}
           id="video" 
-          style={isPlugged ? { height: '100%', width: '100%' } : undefined} 
+          style={isPlugged ? { height: '100%' } : undefined} 
           autoPlay 
           muted />
       </div>

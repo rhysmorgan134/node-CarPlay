@@ -394,7 +394,6 @@ export class SendTouch extends SendableMessage {
   x: number
   y: number
   action: TouchAction
-  config: DongleConfig
 
   getData(): Buffer {
     const actionB = Buffer.alloc(4)
@@ -402,24 +401,17 @@ export class SendTouch extends SendableMessage {
     const yB = Buffer.alloc(4)
     const flags = Buffer.alloc(4)
     actionB.writeUInt32LE(this.action)
-
-    const { width, height } = this.config
-    const x = this.x * (10000 / width)
-    const y = this.y * (10000 / height)
-
-    console.log([x, y])
-    xB.writeUInt32LE(x)
-    yB.writeUInt32LE(y)
+    xB.writeUInt32LE(10000 * this.x)
+    yB.writeUInt32LE(10000 * this.y)
     const data = Buffer.concat([actionB, xB, yB, flags])
     return data
   }
 
-  constructor(x: number, y: number, action: TouchAction, config: DongleConfig) {
+  constructor(x: number, y: number, action: TouchAction) {
     super()
     this.x = x
     this.y = y
     this.action = action
-    this.config = config
   }
 }
 
