@@ -191,7 +191,7 @@ export class DongleDriver extends EventEmitter {
     }, 2000)
     this._frameInterval = setInterval(() => {
       this.send(new SendCarPlay('frame'))
-    }, 1000)
+    }, 5000)
   }
 
   close = async () => {
