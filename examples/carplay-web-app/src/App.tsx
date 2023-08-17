@@ -1,19 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
-import CarPlayWeb, { 
+import { 
   AudioCommand, 
-  AudioData, 
-  SendTouch, 
+  AudioData,  
   TouchAction, 
   VideoData, 
-  DongleConfig,
-  StartResult
+  Message,
+  findDevice,
+  requestDevice,
+  DongleConfig
 }  from 'node-carplay/dist/web'
 import JMuxer from 'jmuxer';
 
-const START_MIC_COMMANDS = [AudioCommand.AudioPhonecallStart, AudioCommand.AudioSiriStart]
-const STOP_MIC_COMMANDS = [AudioCommand.AudioPhonecallStop, AudioCommand.AudioSiriStop]
-const settings: DongleConfig = {
+export const config: DongleConfig = {
   dpi: 160,
   nightMode: false,
   hand: 0,
@@ -23,13 +22,18 @@ const settings: DongleConfig = {
   fps: 60,
 }
 
+const START_MIC_COMMANDS = [AudioCommand.AudioPhonecallStart, AudioCommand.AudioSiriStart]
+const STOP_MIC_COMMANDS = [AudioCommand.AudioPhonecallStop, AudioCommand.AudioSiriStop]
+
+const carplayWorker = new Worker(new URL("./worker/carplay.ts", import.meta.url))
+
 function App() {
   const [isPlugged, setPlugged] = useState(false);
   const [requiresPermissions, setRequiresPermissions] = useState(false);
   const [pointerdown, setPointerDown] = useState(false);
   const [audioState, setAudioState] = useState<{ context: AudioContext, gainNode: GainNode } | null>(null)
-  const carplayRef = useRef<CarPlayWeb>(new CarPlayWeb(settings))
-  const { start, stop, requestDevice, dongleDriver: { send } } = carplayRef.current
+  const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
+
 
   // audio init
   useEffect(() => {
@@ -44,107 +48,110 @@ function App() {
           gainNode: gainNode
         })
     })
-  }, [send])
+  }, [])
   
   useEffect(() => {
-    if (!audioState) return
+    if (!audioState || !jmuxer) return
 
     const { context, gainNode } = audioState
-    const cp = carplayRef.current
 
-    cp.on('audio', (audio: AudioData) => {
-      if (audio.data && audio.format) {
+    carplayWorker.onmessage = (ev) => {
+      const { type, message }: { type: string, message: Message } = ev.data;
+      switch (type) {
+        case 'plugged':
+          setPlugged(true)
+          break;
+        case 'unplugged':
+          setPlugged(false)
+          break;
+        case 'video':
+          const video = message as VideoData
+          jmuxer.feed({
+            video: video.data,
+          })
+          break;
+        case 'audio':
+          const audio = message as AudioData
+          if (audio.data && audio.format) {
 
-        const { format, volume, data: { buffer: audioData } } = audio
-
-        if(volume) {
-          gainNode.gain.value = audio.volume
-        }
-
-        const data = new Float32Array(new Int16Array(audioData)).map(
-          (d) => d / 32768
-        )
-        const sampleRate = format.frequency
-        const channels = format.channel
-        const audioBuffer = context.createBuffer(
-          channels,
-          data.length / channels,
-          sampleRate
-        );
-  
-        for (let ch = 0; ch < channels; ++ch) {
-          audioBuffer
-            .getChannelData(ch)
-            .set(data.filter((_, i) => i % channels === ch));
-        }
-  
-        const src = context.createBufferSource();
-        src.buffer = audioBuffer;
-        src.connect(context.destination);
-        src.start();
-      } else if (audio.command && START_MIC_COMMANDS.includes(audio.command)) {
-        //START MIC
-      } else if (audio.command && STOP_MIC_COMMANDS.includes(audio.command)) {
-        //STOP MIC
+            const { format, volume, data: { buffer: audioData } } = audio
+    
+            if(volume) {
+              gainNode.gain.value = audio.volume
+            }
+    
+            const data = new Float32Array(new Int16Array(audioData)).map(
+              (d) => d / 32768
+            )
+            const sampleRate = format.frequency
+            const channels = format.channel
+            const audioBuffer = context.createBuffer(
+              channels,
+              data.length / channels,
+              sampleRate
+            );
+      
+            for (let ch = 0; ch < channels; ++ch) {
+              audioBuffer
+                .getChannelData(ch)
+                .set(data.filter((_, i) => i % channels === ch));
+            }
+      
+            const src = context.createBufferSource();
+            src.buffer = audioBuffer;
+            src.connect(context.destination);
+            src.start();
+          } else if (audio.command && START_MIC_COMMANDS.includes(audio.command)) {
+            //START MIC
+          } else if (audio.command && STOP_MIC_COMMANDS.includes(audio.command)) {
+            //STOP MIC
+          }
+          break;
+        case 'media':
+          //TODO: implement
+          break;
       }
-    })
-  }, [audioState])
+    }
+  }, [audioState, jmuxer])
 
   // video init
   useEffect(() => {
     const jmuxer = new JMuxer({
       node: 'video',
       mode: 'video',
-      fps: settings.fps,
+      fps: config.fps,
       flushingTime: 100,
       debug: false
     });
-
-    const cp = carplayRef.current
-    
-    cp.on('video', (video: VideoData) => {
-      jmuxer.feed({
-        video: video.data,
-      })
-    })
-
+    setJmuxer(jmuxer)    
     return () => {
-      cp.dongleDriver.close()
       jmuxer.destroy()
     }
-  }, [send]);
+  }, []);
 
   // connect/plug init
   useEffect(() => {
     navigator.usb.onconnect = async () => {
-      const res = await start()
-      if (res === StartResult.RequiresPermission) {
+      const device = await findDevice()
+      if (device) {
+        carplayWorker.postMessage({ type: 'start', data: config })
+      } else{
         setRequiresPermissions(true)
       }
     }
-    
+
     navigator.usb.ondisconnect = async () => {
-      stop()
+      carplayWorker.postMessage({ type: 'stop' })
     }
-
-    const cp = carplayRef.current
-    
-    cp.on('plugged', () => {
-      setPlugged(true)
-    })
-
-    cp.on('unplugged', () => {
-      setPlugged(false)
-    })
-  }, [start, stop])
+  }, [])
 
   const onClick = useCallback(async () => {
     const device = await requestDevice()
     if (device) {
-      start()
+      carplayWorker.postMessage({ type: 'start', data: config })
       setRequiresPermissions(false)
     }
-  }, [requestDevice, start])
+  }, [])
 
   const sendTouchEvent: React.PointerEventHandler<HTMLDivElement> = useCallback((e) => {
     let action = TouchAction.Up;
@@ -168,8 +175,11 @@ function App() {
     }
 
     const { offsetX, offsetY } = e.nativeEvent
-    send(new SendTouch(offsetX / settings.width, offsetY / settings.height, action))
-  }, [pointerdown, send]);
+    carplayWorker.postMessage({
+      type: 'touch',
+      data : { x: offsetX, y: offsetY, action }
+    })
+  }, [pointerdown]);
 
   return (
     <div style={{height: '100%'}}  id={'main'} className="App">

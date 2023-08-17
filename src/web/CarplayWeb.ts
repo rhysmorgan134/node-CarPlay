@@ -9,11 +9,47 @@ import {
 import EventEmitter from 'events'
 import { DongleDriver, DongleConfig } from '../modules'
 
+const { knownDevices } = DongleDriver
+
 export enum StartResult {
   Initialised,
   RequiresPermission,
   FailedtoStart,
 }
+
+export const isCarplayDongle = (device: USBDevice) => {
+  const known = knownDevices.some(
+    kd => kd.productId === device.productId && kd.vendorId === device.vendorId,
+  )
+  return known
+}
+
+export const findDevice = async (): Promise<USBDevice | null> => {
+  try {
+    const devices = await navigator.usb.getDevices()
+    return (
+      devices.find(d => {
+        return isCarplayDongle(d) ? d : undefined
+      }) || null
+    )
+  } catch (err) {
+    return null
+  }
+}
+
+export const requestDevice = async(): Promise<USBDevice | null> => {
+  try {
+    const { knownDevices } = DongleDriver
+
+    const device = await navigator.usb.requestDevice({
+      filters: knownDevices,
+    })
+    return device
+  } catch (err) {
+    return null
+  }
+}
+
 
 export default class CarplayWeb extends EventEmitter {
   private _starting: boolean = false
@@ -49,41 +85,10 @@ export default class CarplayWeb extends EventEmitter {
     this.dongleDriver = driver
   }
 
-  private async findDevice(): Promise<USBDevice | null> {
-    try {
-      const { knownDevices } = DongleDriver
-      const devices = await navigator.usb.getDevices()
-      return (
-        devices.find(d => {
-          const known = knownDevices.some(
-            kd => kd.productId === d.productId && kd.vendorId === d.vendorId,
-          )
-
-          return known ? d : undefined
-        }) || null
-      )
-    } catch (err) {
-      return null
-    }
-  }
-
-  public async requestDevice(): Promise<USBDevice | null> {
-    try {
-      const { knownDevices } = DongleDriver
-
-      const device = await navigator.usb.requestDevice({
-        filters: knownDevices,
-      })
-      return device
-    } catch (err) {
-      return null
-    }
-  }
-
   start = async () => {
     if (this._starting || this._started) return
     this._starting = true
-    const device = await this.findDevice()
+    const device = await findDevice()
     if (device) {
       try {
         await this.dongleDriver.initialise(device)
