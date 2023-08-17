@@ -20,11 +20,9 @@ export default class CarplayWeb extends EventEmitter {
   private _started: boolean = false
   private _pairTimeout: NodeJS.Timeout | null = null
   public dongleDriver: DongleDriver
-  public videoStream: WritableStream
 
   constructor(config: DongleConfig) {
     super()
-    this.videoStream = new WritableStream()
     const driver = new DongleDriver()
     driver.on('ready', async () => {
       const { open } = driver
