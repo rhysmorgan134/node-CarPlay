@@ -1,92 +1,47 @@
-import {
-    Message,
-    Plugged,
-    Unplugged,
-    VideoData,
-    AudioData,
-    MediaData,
-    DongleDriver,
+  import CarplayWeb, {
     DongleConfig,
     SendTouch
   } from 'node-carplay/dist/web'
   
-  let initialised = false
-  let _pairTimeout: NodeJS.Timeout | null = null
-  const { knownDevices } = DongleDriver
-  const driver = new DongleDriver()
-  const { open, send, close } = driver
-  
-  export const config: DongleConfig = {
-    dpi: 160,
-    nightMode: false,
-    hand: 0,
-    boxName: 'nodePlay',
-    width: 1280,
-    height: 480,
-    fps: 60,
-  }
+  let carplayWeb: CarplayWeb | null = null
+  let config: DongleConfig | null = null
 
-  driver.on('ready', async () => {
-    await open(config)
-  })
-  
-  driver.on('message', (message: Message) => {
-    if (message instanceof Plugged) {
-      if (_pairTimeout) {
-        clearTimeout(_pairTimeout)
-        _pairTimeout = null
-      }
-      postMessage({type: 'plugged'});
-    } else if (message instanceof Unplugged) {
-      postMessage({type: 'unplugged'});
-    } else if (message instanceof VideoData) {
-      postMessage({type: 'video', message });
-    } else if (message instanceof AudioData) {
-      postMessage({type: 'audio', message });
-    } else if (message instanceof MediaData) {
-      postMessage({type: 'media', message });
-    }
-  })
-  
-  const isCarplayDongle = (device: USBDevice) => {
-    const known = knownDevices.some(
-      kd => kd.productId === device.productId && kd.vendorId === device.vendorId,
-    )
-    return known
-  }
-  
-  navigator.usb.addEventListener('connect', async (event) => {
-    if (initialised) return
-    if(isCarplayDongle(event.device)) {
-      initialised = true
-      await driver.initialise(event.device)
-      postMessage({type: 'connect'});
-    }
-  });
-  
-  navigator.usb.addEventListener('disconnect', async (event) => {
-    if(isCarplayDongle(event.device)) {
-      try {
-        await close()
-        
-      } catch {}
-      finally { 
-        postMessage({type: 'disconnect'});
-      }
-    }
-  });
-  
   onmessage = async (event) => {
     switch (event.data.type) {
+      case 'start':
+        config = event.data.data as DongleConfig;
+        carplayWeb = new CarplayWeb(config)
+
+        carplayWeb.on('video', message => {
+          postMessage({type: 'video', message })
+        })
+        carplayWeb.on('audio', message => {
+          postMessage({type: 'audio', message })
+        })
+        carplayWeb.on('media', message => {
+          postMessage({type: 'media', message })
+        })
+        carplayWeb.on('plugged', () => {
+          postMessage({type: 'plugged'});
+        })
+        carplayWeb.on('unplugged', () => {
+          postMessage({type: 'unplugged'});
+        })
+
+        carplayWeb.start()
+        break
       case 'touch':
-        const { x, y, action } = event.data.data
-        const data = new SendTouch(x / config.width, y / config.height, action)
-        send(data);
+        if (config && carplayWeb) {
+          const { x, y, action } = event.data.data
+          const data = new SendTouch(x / config.width, y / config.height, action)
+          carplayWeb.dongleDriver.send(data);
+        }
         break;
       case 'close':
-        close()
+        carplayWeb?.stop()
         break;
     }
   }
 
   export {};
+  

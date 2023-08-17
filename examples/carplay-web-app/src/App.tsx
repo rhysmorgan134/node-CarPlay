@@ -6,9 +6,21 @@ import {
   TouchAction, 
   VideoData, 
   Message,
+  findDevice,
+  requestDevice,
+  DongleConfig
 }  from 'node-carplay/dist/web'
 import JMuxer from 'jmuxer';
-import { config as settings } from './worker/carplay'
+
+export const config: DongleConfig = {
+  dpi: 160,
+  nightMode: false,
+  hand: 0,
+  boxName: 'nodePlay',
+  width: 1280,
+  height: 480,
+  fps: 60,
+}
 
 const START_MIC_COMMANDS = [AudioCommand.AudioPhonecallStart, AudioCommand.AudioSiriStart]
 const STOP_MIC_COMMANDS = [AudioCommand.AudioPhonecallStop, AudioCommand.AudioSiriStop]
@@ -17,7 +29,7 @@ const carplayWorker = new Worker(new URL("./worker/carplay.ts", import.meta.url)
 
 function App() {
   const [isPlugged, setPlugged] = useState(false);
-  //const [requiresPermissions, setRequiresPermissions] = useState(false);
+  const [requiresPermissions, setRequiresPermissions] = useState(false);
   const [pointerdown, setPointerDown] = useState(false);
   const [audioState, setAudioState] = useState<{ context: AudioContext, gainNode: GainNode } | null>(null)
   const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
@@ -107,7 +119,7 @@ function App() {
     const jmuxer = new JMuxer({
       node: 'video',
       mode: 'video',
-      fps: settings.fps,
+      fps: config.fps,
       flushingTime: 100,
       debug: false
     });
@@ -117,7 +129,28 @@ function App() {
     }
   }, []);
 
+  // connect/plug init
+  useEffect(() => {
+    navigator.usb.onconnect = async () => {
+      const device = await findDevice()
+      if (device) {
+        carplayWorker.postMessage({ type: 'start', data: config })
+      } else{
+        setRequiresPermissions(true)
+      }
+    }
+
+    navigator.usb.ondisconnect = async () => {
+      carplayWorker.postMessage({ type: 'stop' })
+    }
+  }, [])
+
   const onClick = useCallback(async () => {
+    const device = await requestDevice()
+    if (device) {
+      carplayWorker.postMessage({ type: 'start', data: config })
+      setRequiresPermissions(false)
+    }
   }, [])
 
   const sendTouchEvent: React.PointerEventHandler<HTMLDivElement> = useCallback((e) => {
@@ -150,6 +183,12 @@ function App() {
 
   return (
     <div style={{height: '100%'}}  id={'main'} className="App">
+      {requiresPermissions && <button
+          onClick={onClick}
+          rel="noopener noreferrer"
+        >
+          Request USB Permissions
+        </button>}
       <div
         id="videoContainer" 
         onPointerDown={sendTouchEvent}
