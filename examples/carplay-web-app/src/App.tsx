@@ -129,21 +129,33 @@ function App() {
     }
   }, []);
 
+  const debounce = (fn: Function, ms = 300) => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    return function (this: any, ...args: any[]) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => fn.apply(this, args), ms);
+    };
+  };
+  
+  const checkDevice = useCallback(debounce(async () => {
+    const device = await findDevice()
+    if (device) {
+      carplayWorker.postMessage({ type: 'start', data: config })
+    } else{
+      setRequiresPermissions(true)
+    }
+  }), [setRequiresPermissions])
+
   // connect/plug init
   useEffect(() => {
     navigator.usb.onconnect = async () => {
-      const device = await findDevice()
-      if (device) {
-        carplayWorker.postMessage({ type: 'start', data: config })
-      } else{
-        setRequiresPermissions(true)
-      }
+      checkDevice()
     }
 
     navigator.usb.ondisconnect = async () => {
       carplayWorker.postMessage({ type: 'stop' })
     }
-  }, [])
+  }, [checkDevice])
 
   const onClick = useCallback(async () => {
     const device = await requestDevice()

@@ -9,6 +9,7 @@
   onmessage = async (event) => {
     switch (event.data.type) {
       case 'start':
+        if (carplayWeb) return
         config = event.data.data as DongleConfig;
         carplayWeb = new CarplayWeb(config)
 
