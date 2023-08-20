@@ -39,7 +39,8 @@
         }
         break;
       case 'close':
-        carplayWeb?.stop()
+        await carplayWeb?.stop()
+        carplayWeb = null
         break;
     }
   }

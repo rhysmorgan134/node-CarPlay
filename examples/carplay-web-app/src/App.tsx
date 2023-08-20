@@ -19,7 +19,7 @@ export const config: DongleConfig = {
   boxName: 'nodePlay',
   width: 1280,
   height: 480,
-  fps: 60,
+  fps: 30,
 }
 
 const START_MIC_COMMANDS = [AudioCommand.AudioPhonecallStart, AudioCommand.AudioSiriStart]
@@ -47,14 +47,12 @@ function App() {
           context: audioContext,
           gainNode: gainNode
         })
+    }).catch((err) => {
+      console.error(err)
     })
   }, [])
   
   useEffect(() => {
-    if (!audioState || !jmuxer) return
-
-    const { context, gainNode } = audioState
-
     carplayWorker.onmessage = (ev) => {
       const { type, message }: { type: string, message: Message } = ev.data;
       switch (type) {
@@ -65,12 +63,16 @@ function App() {
           setPlugged(false)
           break;
         case 'video':
+          if (!jmuxer) return
           const video = message as VideoData
           jmuxer.feed({
             video: video.data,
+            duration: 0
           })
           break;
         case 'audio':
+          if (!audioState) return
+          const { context, gainNode } = audioState
           const audio = message as AudioData
           if (audio.data && audio.format) {
 
@@ -155,6 +157,8 @@ function App() {
     navigator.usb.ondisconnect = async () => {
       carplayWorker.postMessage({ type: 'stop' })
     }
+
+    checkDevice()
   }, [checkDevice])
 
   const onClick = useCallback(async () => {
@@ -195,12 +199,19 @@ function App() {
 
   return (
     <div style={{height: '100%'}}  id={'main'} className="App">
-      {requiresPermissions && <button
+      {requiresPermissions &&
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+        <button
           onClick={onClick}
           rel="noopener noreferrer"
         >
-          Request USB Permissions
-        </button>}
+          Plug-In Carplay Dongle and Press
+        </button>
+        </div>}
       <div
         id="videoContainer" 
         onPointerDown={sendTouchEvent}
