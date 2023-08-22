@@ -1,11 +1,7 @@
 import { EventEmitter } from 'events'
 import Mic from 'node-microphone'
-import IMicrophone from '../modules/IMicrophone'
 
-export default class NodeMicrophone
-  extends EventEmitter
-  implements IMicrophone
-{
+export default class NodeMicrophone extends EventEmitter {
   private _active: boolean
   private _mic: Mic
   private _timeout: NodeJS.Timeout | null = null

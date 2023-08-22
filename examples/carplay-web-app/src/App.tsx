@@ -1,60 +1,117 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { RotatingLines } from 'react-loader-spinner'
 import './App.css';
 import { 
   AudioCommand, 
   AudioData,  
   TouchAction, 
-  VideoData, 
-  Message,
   findDevice,
   requestDevice,
-  DongleConfig
+  DongleConfig,
+  WebMicrophone
 }  from 'node-carplay/dist/web'
 import JMuxer from 'jmuxer';
+import { CarPlayWorker } from './worker/types';
 
 export const config: DongleConfig = {
   dpi: 160,
   nightMode: false,
   hand: 0,
   boxName: 'nodePlay',
-  width: 1280,
-  height: 480,
-  fps: 30,
+  width: window.innerWidth,
+  height: window.innerHeight,
+  fps: 60,
 }
 
 const START_MIC_COMMANDS = [AudioCommand.AudioPhonecallStart, AudioCommand.AudioSiriStart]
 const STOP_MIC_COMMANDS = [AudioCommand.AudioPhonecallStop, AudioCommand.AudioSiriStop]
 
-const carplayWorker = new Worker(new URL("./worker/carplay.ts", import.meta.url))
-
 function App() {
   const [isPlugged, setPlugged] = useState(false);
-  const [requiresPermissions, setRequiresPermissions] = useState(false);
+  const [noDevice, setNoDevice] = useState(false);
   const [pointerdown, setPointerDown] = useState(false);
-  const [audioState, setAudioState] = useState<{ context: AudioContext, gainNode: GainNode } | null>(null)
+  const [receivingVideo, setReceivingVideo] = useState(false);
+  const [audioState, setAudioState] = useState<{ context: AudioContext, gainNode: GainNode, mic: WebMicrophone } | null>(null)
   const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
 
+  const carplayWorker = useRef(
+    new Worker(new URL("./worker/carplay.ts", import.meta.url))
+    ).current as CarPlayWorker
+
+  const processAudio = useCallback((audio: AudioData) => {
+    if (!audioState) return
+    const { context, gainNode, mic } = audioState
+    if (audio.data && audio.format) {
+
+      const { format, volume, data: { buffer: audioData } } = audio
+
+      if(volume) {
+        gainNode.gain.value = audio.volume
+      }
+
+      const data = new Float32Array(new Int16Array(audioData)).map(
+        (d) => d / 32768
+      )
+      const sampleRate = format.frequency
+      const channels = format.channel
+      const audioBuffer = context.createBuffer(
+        channels,
+        data.length / channels,
+        sampleRate
+      );
+
+      for (let ch = 0; ch < channels; ++ch) {
+        audioBuffer
+          .getChannelData(ch)
+          .set(data.filter((_, i) => i % channels === ch));
+      }
+
+      const src = context.createBufferSource();
+      src.buffer = audioBuffer;
+      src.connect(context.destination);
+      src.start();
+    } else if (audio.command && START_MIC_COMMANDS.includes(audio.command)) {
+      mic.start()
+    } else if (audio.command && STOP_MIC_COMMANDS.includes(audio.command)) {
+      mic.stop()
+    }
+  }, [audioState])
 
   // audio init
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(() => {
+    const initAudio = async () => {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
         const audioContext = new AudioContext();
         const gainNode = audioContext.createGain();
         gainNode.gain.value = 1;
         gainNode.connect(audioContext.destination)
+  
+        const mic = new WebMicrophone(mediaStream)
+        mic.on('data', (payload) => {
+          carplayWorker.postMessage({
+            type: 'microphoneInput',
+            payload
+          })
+        })
+  
         setAudioState({
           context: audioContext,
-          gainNode: gainNode
+          gainNode: gainNode,
+          mic
         })
-    }).catch((err) => {
-      console.error(err)
-    })
-  }, [])
+      } catch (err) {
+        console.error('Failed to init audio', err)
+      }
+    }
+    
+    initAudio()
+  }, [carplayWorker])
   
+  // subscribe to worker messages
   useEffect(() => {
     carplayWorker.onmessage = (ev) => {
-      const { type, message }: { type: string, message: Message } = ev.data;
+      const { type } = ev.data
       switch (type) {
         case 'plugged':
           setPlugged(true)
@@ -63,58 +120,25 @@ function App() {
           setPlugged(false)
           break;
         case 'video':
-          if (!jmuxer) return
-          const video = message as VideoData
+          // if document is hidden we dont need to feed frames
+          if (!jmuxer || document.hidden) return
+          if (!receivingVideo) setReceivingVideo(true)
+          const { message: video } = ev.data
           jmuxer.feed({
             video: video.data,
             duration: 0
           })
           break;
         case 'audio':
-          if (!audioState) return
-          const { context, gainNode } = audioState
-          const audio = message as AudioData
-          if (audio.data && audio.format) {
-
-            const { format, volume, data: { buffer: audioData } } = audio
-    
-            if(volume) {
-              gainNode.gain.value = audio.volume
-            }
-    
-            const data = new Float32Array(new Int16Array(audioData)).map(
-              (d) => d / 32768
-            )
-            const sampleRate = format.frequency
-            const channels = format.channel
-            const audioBuffer = context.createBuffer(
-              channels,
-              data.length / channels,
-              sampleRate
-            );
-      
-            for (let ch = 0; ch < channels; ++ch) {
-              audioBuffer
-                .getChannelData(ch)
-                .set(data.filter((_, i) => i % channels === ch));
-            }
-      
-            const src = context.createBufferSource();
-            src.buffer = audioBuffer;
-            src.connect(context.destination);
-            src.start();
-          } else if (audio.command && START_MIC_COMMANDS.includes(audio.command)) {
-            //START MIC
-          } else if (audio.command && STOP_MIC_COMMANDS.includes(audio.command)) {
-            //STOP MIC
-          }
+          const { message: audio } = ev.data
+          processAudio(audio)
           break;
         case 'media':
           //TODO: implement
           break;
       }
     }
-  }, [audioState, jmuxer])
+  }, [carplayWorker, jmuxer, processAudio, receivingVideo])
 
   // video init
   useEffect(() => {
@@ -124,50 +148,43 @@ function App() {
       fps: config.fps,
       flushingTime: 100,
       debug: false
-    });
-    setJmuxer(jmuxer)    
+    })
+    setJmuxer(jmuxer)
     return () => {
       jmuxer.destroy()
     }
   }, []);
-
-  const debounce = (fn: Function, ms = 300) => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    return function (this: any, ...args: any[]) {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => fn.apply(this, args), ms);
-    };
-  };
   
-  const checkDevice = useCallback(debounce(async () => {
-    const device = await findDevice()
+  const checkDevice = useCallback(async (request: boolean = false) => {
+    const device = request ? await requestDevice() : await findDevice()
     if (device) {
-      carplayWorker.postMessage({ type: 'start', data: config })
+      setNoDevice(false)
+      carplayWorker.postMessage({ type: 'start', payload: config })
     } else{
-      setRequiresPermissions(true)
+      setNoDevice(true)
     }
-  }), [setRequiresPermissions])
+  }, [carplayWorker])
 
-  // connect/plug init
+  // usb connect/disconnect handling and device check
   useEffect(() => {
     navigator.usb.onconnect = async () => {
       checkDevice()
     }
 
     navigator.usb.ondisconnect = async () => {
-      carplayWorker.postMessage({ type: 'stop' })
+      const device = await findDevice()
+      if(!device) { 
+        carplayWorker.postMessage({ type: 'stop' })
+        setNoDevice(true)
+      }
     }
 
     checkDevice()
-  }, [checkDevice])
+  }, [carplayWorker, checkDevice])
 
-  const onClick = useCallback(async () => {
-    const device = await requestDevice()
-    if (device) {
-      carplayWorker.postMessage({ type: 'start', data: config })
-      setRequiresPermissions(false)
-    }
-  }, [])
+  const onClick = useCallback(() => {
+    checkDevice(true)
+  }, [checkDevice])
 
   const sendTouchEvent: React.PointerEventHandler<HTMLDivElement> = useCallback((e) => {
     let action = TouchAction.Up;
@@ -193,24 +210,36 @@ function App() {
     const { offsetX, offsetY } = e.nativeEvent
     carplayWorker.postMessage({
       type: 'touch',
-      data : { x: offsetX, y: offsetY, action }
+      payload : { x: offsetX, y: offsetY, action }
     })
-  }, [pointerdown]);
+  }, [carplayWorker, pointerdown]);
+
+  const isLoading = !noDevice && !receivingVideo
 
   return (
     <div style={{height: '100%'}}  id={'main'} className="App">
-      {requiresPermissions &&
+      {(noDevice || isLoading) &&
         <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center'
         }}>
-        <button
+        {noDevice && <button
           onClick={onClick}
           rel="noopener noreferrer"
         >
           Plug-In Carplay Dongle and Press
-        </button>
+        </button>}
+        {isLoading && <RotatingLines
+          strokeColor="grey"
+          strokeWidth="5"
+          animationDuration="0.75"
+          width="96"
+          visible={true}
+        />}
         </div>}
       <div
         id="videoContainer" 

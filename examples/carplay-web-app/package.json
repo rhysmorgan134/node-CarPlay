@@ -16,6 +16,7 @@
     "process": "^0.11.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-loader-spinner": "^5.3.4",
     "react-scripts": "5.0.1",
     "stream-browserify": "^3.0.0",
     "typescript": "^4.9.5",

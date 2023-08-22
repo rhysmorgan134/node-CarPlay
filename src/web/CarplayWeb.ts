@@ -37,7 +37,7 @@ export const findDevice = async (): Promise<USBDevice | null> => {
   }
 }
 
-export const requestDevice = async(): Promise<USBDevice | null> => {
+export const requestDevice = async (): Promise<USBDevice | null> => {
   try {
     const { knownDevices } = DongleDriver
 
@@ -49,7 +49,6 @@ export const requestDevice = async(): Promise<USBDevice | null> => {
     return null
   }
 }
-
 
 export default class CarplayWeb extends EventEmitter {
   private _starting: boolean = false
