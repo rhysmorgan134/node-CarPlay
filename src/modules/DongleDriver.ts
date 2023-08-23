@@ -13,7 +13,7 @@ import {
 import EventEmitter from 'events'
 
 const CONFIG_NUMBER = 1
-
+const MAX_ERROR_COUNT = 5
 export type DongleConfig = {
   width: number
   height: number
@@ -34,12 +34,15 @@ export const DEFAULT_CONFIG: DongleConfig = {
   hand: 0,
 }
 
+export class DriverStateError extends Error {}
+
 export class DongleDriver extends EventEmitter {
   private _heartbeatInterval: NodeJS.Timer | null = null
   private _frameInterval: NodeJS.Timer | null = null
   private _device: USBDevice | null = null
   private _inEP: USBEndpoint | null = null
   private _outEP: USBEndpoint | null = null
+  private errorCount = 0
 
   static knownDevices = [
     { vendorId: 0x1314, productId: 0x1520 },
@@ -48,13 +51,13 @@ export class DongleDriver extends EventEmitter {
 
   private initDevice = async () => {
     if (!this._device) {
-      throw Error('Illegal state - device not set')
+      throw new DriverStateError('Illegal state - device not set')
     }
 
     await this._device.selectConfiguration(CONFIG_NUMBER)
 
     if (!this._device.configuration) {
-      throw Error('Illegal state - device has no configuration')
+      throw new DriverStateError('Illegal state - device has no configuration')
     }
 
     console.log('getting interface')
@@ -69,11 +72,11 @@ export class DongleDriver extends EventEmitter {
     const outEndpoint = endpoints.find(e => e.direction === 'out')
 
     if (!inEndpoint) {
-      throw Error('Illegal state - no IN endpoint found')
+      throw new DriverStateError('Illegal state - no IN endpoint found')
     }
 
     if (!outEndpoint) {
-      throw Error('Illegal state - no OUT endpoint found')
+      throw new DriverStateError('Illegal state - no OUT endpoint found')
     }
     this._inEP = inEndpoint
     this._outEP = outEndpoint
@@ -91,7 +94,6 @@ export class DongleDriver extends EventEmitter {
       this._device = device
       console.log('opening')
       await this._device.open()
-      //await this._device.reset()
       await this.initDevice()
       return true
     } catch (err) {
@@ -124,6 +126,16 @@ export class DongleDriver extends EventEmitter {
     if (!this._device?.opened) {
       return
     }
+
+    // If we error out - refresh connection
+    if(this.errorCount >= MAX_ERROR_COUNT) {
+      const device = this._device
+      await this.close()
+      await device.reset()
+      await this.initialise(device)
+      return
+    }
+    
     try {
       const headerData = await this._device?.transferIn(
         this._inEP!.endpointNumber,
@@ -158,6 +170,7 @@ export class DongleDriver extends EventEmitter {
       } else {
         console.error(`Unexpected Error parsing header for data`, error)
       }
+      this.errorCount++
     } finally {
       this.readLoop()
     }
@@ -171,6 +184,7 @@ export class DongleDriver extends EventEmitter {
       return
     }
 
+    this.errorCount = 0
     const { dpi: _dpi, nightMode: _nightMode, boxName: _boxName } = config
     const initMessages = [
       new SendNumber(_dpi, FileAddress.DPI),
