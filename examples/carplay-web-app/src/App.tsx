@@ -1,17 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RotatingLines } from 'react-loader-spinner'
 import './App.css';
 import { 
-  AudioCommand, 
-  AudioData,  
   TouchAction, 
   findDevice,
   requestDevice,
-  DongleConfig,
-  WebMicrophone
-}  from 'node-carplay/dist/web'
+  DongleConfig}  from 'node-carplay/dist/web'
 import JMuxer from 'jmuxer';
 import { CarPlayWorker } from './worker/types';
+import useCarplayAudio from './useCarplayAudio';
 
 export const config: DongleConfig = {
   dpi: 160,
@@ -23,91 +20,20 @@ export const config: DongleConfig = {
   fps: 60,
 }
 
-const START_MIC_COMMANDS = [AudioCommand.AudioPhonecallStart, AudioCommand.AudioSiriStart]
-const STOP_MIC_COMMANDS = [AudioCommand.AudioPhonecallStop, AudioCommand.AudioSiriStop]
-
 function App() {
   const [isPlugged, setPlugged] = useState(false);
   const [noDevice, setNoDevice] = useState(false);
   const [pointerdown, setPointerDown] = useState(false);
   const [receivingVideo, setReceivingVideo] = useState(false);
-  const [audioState, setAudioState] = useState<{ context: AudioContext, gainNode: GainNode, mic: WebMicrophone } | null>(null)
   const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
 
-  const carplayWorker = useRef(
-    new Worker(new URL("./worker/carplay.ts", import.meta.url))
-    ).current as CarPlayWorker
-
-  const processAudio = useCallback((audio: AudioData) => {
-    if (!audioState) return
-    const { context, gainNode, mic } = audioState
-    if (audio.data && audio.format) {
-
-      const { format, volume, data: { buffer: audioData } } = audio
-
-      if(volume) {
-        gainNode.gain.value = audio.volume
-      }
-
-      const data = new Float32Array(new Int16Array(audioData)).map(
-        (d) => d / 32768
-      )
-      const sampleRate = format.frequency
-      const channels = format.channel
-      const audioBuffer = context.createBuffer(
-        channels,
-        data.length / channels,
-        sampleRate
-      );
-
-      for (let ch = 0; ch < channels; ++ch) {
-        audioBuffer
-          .getChannelData(ch)
-          .set(data.filter((_, i) => i % channels === ch));
-      }
-
-      const src = context.createBufferSource();
-      src.buffer = audioBuffer;
-      src.connect(context.destination);
-      src.start();
-    } else if (audio.command && START_MIC_COMMANDS.includes(audio.command)) {
-      mic.start()
-    } else if (audio.command && STOP_MIC_COMMANDS.includes(audio.command)) {
-      mic.stop()
-    }
-  }, [audioState])
-
-  // audio init
-  useEffect(() => {
-    const initAudio = async () => {
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        const audioContext = new AudioContext();
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = 1;
-        gainNode.connect(audioContext.destination)
+  const carplayWorker = useMemo(
+    () => new Worker(new URL("./worker/carplay.ts", import.meta.url)) as CarPlayWorker,
+    []
+  );
   
-        const mic = new WebMicrophone(mediaStream)
-        mic.on('data', (payload) => {
-          carplayWorker.postMessage({
-            type: 'microphoneInput',
-            payload
-          })
-        })
-  
-        setAudioState({
-          context: audioContext,
-          gainNode: gainNode,
-          mic
-        })
-      } catch (err) {
-        console.error('Failed to init audio', err)
-      }
-    }
-    
-    initAudio()
-  }, [carplayWorker])
-  
+  const { processAudio } = useCarplayAudio(carplayWorker)
+
   // subscribe to worker messages
   useEffect(() => {
     carplayWorker.onmessage = (ev) => {
