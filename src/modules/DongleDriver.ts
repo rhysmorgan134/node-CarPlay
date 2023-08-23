@@ -127,15 +127,12 @@ export class DongleDriver extends EventEmitter {
       return
     }
 
-    // If we error out - refresh connection
+    // If we error out - stop loop, emit failure
     if(this.errorCount >= MAX_ERROR_COUNT) {
-      const device = this._device
-      await this.close()
-      await device.reset()
-      await this.initialise(device)
+      this.emit('failure')
       return
     }
-    
+
     try {
       const headerData = await this._device?.transferIn(
         this._inEP!.endpointNumber,
