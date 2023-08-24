@@ -7,10 +7,16 @@ import {
   MediaData,
   SendCarPlay,
 } from '../modules/messages'
-import EventEmitter from 'events'
 import { DongleDriver, DongleConfig } from '../modules'
 
 const { knownDevices } = DongleDriver
+
+export type CarplayMessage =
+  | { type: 'plugged' }
+  | { type: 'unplugged' }
+  | { type: 'audio'; message: AudioData }
+  | { type: 'video'; message: VideoData }
+  | { type: 'media'; message: MediaData }
 
 export enum StartResult {
   Initialised,
@@ -51,14 +57,13 @@ export const requestDevice = async (): Promise<USBDevice | null> => {
   }
 }
 
-export default class CarplayWeb extends EventEmitter {
+export default class CarplayWeb {
   private _starting: boolean = false
   private _started: boolean = false
   private _pairTimeout: NodeJS.Timeout | null = null
   public dongleDriver: DongleDriver
 
   constructor(config: DongleConfig) {
-    super()
     const driver = new DongleDriver()
     driver.on('ready', async () => {
       const { open } = driver
@@ -75,19 +80,21 @@ export default class CarplayWeb extends EventEmitter {
           clearTimeout(this._pairTimeout)
           this._pairTimeout = null
         }
-        this.emit('plugged')
+        this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
-        this.emit('unplugged')
+        this.onmessage?.({ type: 'unplugged' })
       } else if (message instanceof VideoData) {
-        this.emit('video', message)
+        this.onmessage?.({ type: 'video', message })
       } else if (message instanceof AudioData) {
-        this.emit('audio', message)
+        this.onmessage?.({ type: 'audio', message })
       } else if (message instanceof MediaData) {
-        this.emit('media', message)
+        this.onmessage?.({ type: 'media', message })
       }
     })
     this.dongleDriver = driver
   }
+
+  public onmessage: ((ev: CarplayMessage) => void) | null = null
 
   start = async () => {
     if (this._starting || this._started) return

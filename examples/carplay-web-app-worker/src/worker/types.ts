@@ -1,17 +1,10 @@
 import {
-  AudioData,
   DongleConfig,
-  MediaData,
   TouchAction,
-  VideoData,
+  CarplayMessage,
 } from 'node-carplay/dist/web'
 
-export type CarplayWorkerMessage =
-  | { data: { type: 'plugged' } }
-  | { data: { type: 'unplugged' } }
-  | { data: { type: 'audio'; message: AudioData } }
-  | { data: { type: 'video'; message: VideoData } }
-  | { data: { type: 'media'; message: MediaData } }
+export type CarplayWorkerMessage = { data: CarplayMessage }
 
 export type Command =
   | { type: 'stop' }

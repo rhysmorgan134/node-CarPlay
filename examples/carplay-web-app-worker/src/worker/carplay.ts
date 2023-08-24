@@ -1,4 +1,5 @@
 import CarplayWeb, {
+  CarplayMessage,
   DongleConfig,
   SendAudio,
   SendTouch,
@@ -8,28 +9,17 @@ import { Command } from './types'
 let carplayWeb: CarplayWeb | null = null
 let config: DongleConfig | null = null
 
+const handleMessage = (message: CarplayMessage) => {
+  postMessage(message)
+}
+
 onmessage = async (event: MessageEvent<Command>) => {
   switch (event.data.type) {
     case 'start':
       if (carplayWeb) return
       config = event.data.payload
       carplayWeb = new CarplayWeb(config)
-
-      carplayWeb.on('video', message => {
-        postMessage({ type: 'video', message })
-      })
-      carplayWeb.on('audio', message => {
-        postMessage({ type: 'audio', message })
-      })
-      carplayWeb.on('media', message => {
-        postMessage({ type: 'media', message })
-      })
-      carplayWeb.on('plugged', () => {
-        postMessage({ type: 'plugged' })
-      })
-      carplayWeb.on('unplugged', () => {
-        postMessage({ type: 'unplugged' })
-      })
+      carplayWeb.onmessage = handleMessage
 
       carplayWeb.start()
       break
