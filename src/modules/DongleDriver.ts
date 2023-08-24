@@ -188,7 +188,7 @@ export class DongleDriver extends EventEmitter {
       new SendBoolean(false, FileAddress.HAND_DRIVE_MODE),
       new SendBoolean(true, FileAddress.CHARGE_MODE),
       new SendString(_boxName, FileAddress.BOX_NAME),
-      new SendCarPlay('wifiEn')
+      new SendCarPlay('wifiEn'),
     ]
     await Promise.all(initMessages.map(this.send))
     setTimeout(() => {
