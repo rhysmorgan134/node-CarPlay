@@ -8,8 +8,6 @@ lerna-debug.log*
 .pnpm-debug.log*
 .apk
 *.apk
-modules/assets/
-assets
 .idea
 
 # Diagnostic reports (https://nodejs.org/api/report.html)

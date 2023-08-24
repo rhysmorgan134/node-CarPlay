@@ -90,7 +90,14 @@ export default class CarplayWS {
       setTimeout(this.start, 2000)
       return
     }
-    const initialised = await this._dongleDriver.initialise(device)
+    let initialised = false
+    try {
+      await this._dongleDriver.initialise(device)
+      initialised = true
+    } catch (err) {
+      console.error(err)
+    }
+
     if (!initialised) {
       console.log('carplay not initialised, retrying in 2s')
       setTimeout(this.start, 2000)

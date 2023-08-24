@@ -5,6 +5,7 @@ import {
   VideoData,
   AudioData,
   MediaData,
+  SendCarPlay,
 } from '../modules/messages'
 import EventEmitter from 'events'
 import { DongleDriver, DongleConfig } from '../modules'
@@ -61,6 +62,10 @@ export default class CarplayWeb extends EventEmitter {
     const driver = new DongleDriver()
     driver.on('ready', async () => {
       const { open } = driver
+      this._pairTimeout = setTimeout(() => {
+        console.log('no device, sending pair')
+        driver.send(new SendCarPlay('wifiPair'))
+      }, 15000)
 
       await open(config)
     })

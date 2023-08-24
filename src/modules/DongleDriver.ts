@@ -14,6 +14,7 @@ import EventEmitter from 'events'
 
 const CONFIG_NUMBER = 1
 const MAX_ERROR_COUNT = 5
+
 export type DongleConfig = {
   width: number
   height: number
@@ -49,62 +50,56 @@ export class DongleDriver extends EventEmitter {
     { vendorId: 0x1314, productId: 0x1521 },
   ]
 
-  private initDevice = async () => {
-    if (!this._device) {
-      throw new DriverStateError('Illegal state - device not set')
-    }
-
-    await this._device.selectConfiguration(CONFIG_NUMBER)
-
-    if (!this._device.configuration) {
-      throw new DriverStateError('Illegal state - device has no configuration')
-    }
-
-    console.log('getting interface')
-    const {
-      interfaceNumber,
-      alternate: { endpoints },
-    } = this._device.configuration.interfaces[0]
-    console.log('claiming')
-    await this._device.claimInterface(interfaceNumber)
-
-    const inEndpoint = endpoints.find(e => e.direction === 'in')
-    const outEndpoint = endpoints.find(e => e.direction === 'out')
-
-    if (!inEndpoint) {
-      throw new DriverStateError('Illegal state - no IN endpoint found')
-    }
-
-    if (!outEndpoint) {
-      throw new DriverStateError('Illegal state - no OUT endpoint found')
-    }
-    this._inEP = inEndpoint
-    this._outEP = outEndpoint
-    console.log(this._device)
-
-    this.emit('ready')
-  }
-
   initialise = async (device: USBDevice) => {
-    if (this._device?.opened) {
-      return true
+    if (this._device) {
+      return
     }
 
     try {
       this._device = device
-      console.log('opening')
+      console.debug('opening')
+
       await this._device.open()
-      await this.initDevice()
-      return true
+      await this._device.selectConfiguration(CONFIG_NUMBER)
+
+      if (!this._device.configuration) {
+        throw new DriverStateError(
+          'Illegal state - device has no configuration',
+        )
+      }
+
+      console.debug('getting interface')
+      const {
+        interfaceNumber,
+        alternate: { endpoints },
+      } = this._device.configuration.interfaces[0]
+      console.debug('claiming')
+      await this._device.claimInterface(interfaceNumber)
+
+      const inEndpoint = endpoints.find(e => e.direction === 'in')
+      const outEndpoint = endpoints.find(e => e.direction === 'out')
+
+      if (!inEndpoint) {
+        throw new DriverStateError('Illegal state - no IN endpoint found')
+      }
+
+      if (!outEndpoint) {
+        throw new DriverStateError('Illegal state - no OUT endpoint found')
+      }
+      this._inEP = inEndpoint
+      this._outEP = outEndpoint
+      console.debug(this._device)
+
+      this.emit('ready')
     } catch (err) {
       this.close()
-      return false
+      throw err
     }
   }
 
   send = async (message: SendableMessage) => {
     if (!this._device?.opened) {
-      return
+      return null
     }
 
     try {
@@ -116,9 +111,12 @@ export class DongleDriver extends EventEmitter {
       )
       if (transferResult.status !== 'ok') {
         console.error(transferResult)
+        return false
       }
+      return true
     } catch (err) {
       console.error('Failure sending message to dongle', err)
+      return false
     }
   }
 
@@ -128,7 +126,8 @@ export class DongleDriver extends EventEmitter {
     }
 
     // If we error out - stop loop, emit failure
-    if(this.errorCount >= MAX_ERROR_COUNT) {
+    if (this.errorCount >= MAX_ERROR_COUNT) {
+      this.close()
       this.emit('failure')
       return
     }
@@ -140,8 +139,7 @@ export class DongleDriver extends EventEmitter {
       )
       const data = headerData?.data?.buffer
       if (!data) {
-        console.error('Failed to read header data')
-        return
+        throw new HeaderBuildError('Failed to read header data')
       }
       const header = MessageHeader.fromBuffer(Buffer.from(data))
       let extraData: Buffer | undefined = undefined
@@ -175,7 +173,7 @@ export class DongleDriver extends EventEmitter {
 
   open = async (config: DongleConfig) => {
     if (!this._device) {
-      throw new Error('No device set - call initialise first')
+      throw new DriverStateError('No device set - call initialise first')
     }
     if (!this._device?.opened) {
       return
@@ -190,10 +188,12 @@ export class DongleDriver extends EventEmitter {
       new SendBoolean(false, FileAddress.HAND_DRIVE_MODE),
       new SendBoolean(true, FileAddress.CHARGE_MODE),
       new SendString(_boxName, FileAddress.BOX_NAME),
+      new SendCarPlay('wifiEn')
     ]
     await Promise.all(initMessages.map(this.send))
-    await this.send(new SendCarPlay('wifiEn'))
-    await this.send(new SendCarPlay('wifiConnect'))
+    setTimeout(() => {
+      this.send(new SendCarPlay('wifiConnect'))
+    }, 1000)
 
     this.readLoop()
 
