@@ -10,12 +10,6 @@ function floatTo16BitPCM(input: Float32Array) {
   return output
 }
 
-export type MicrophoneConfig = {
-  sampleRate: number
-  channels: number
-  bufferSize: number
-}
-
 export class WebMicrophone extends EventEmitter {
   private active = false
   private bufferSize = 2048
@@ -24,13 +18,14 @@ export class WebMicrophone extends EventEmitter {
   private sampleRate = 16000
   private channels = 1
   private audioContext: AudioContext
+  private inputStream: MediaStreamAudioSourceNode
   // TODO: migrate to AudioWorklet
   private recorder: ScriptProcessorNode
 
   constructor(mediaStream: MediaStream) {
     super()
     const audioContext = new AudioContext({ sampleRate: this.sampleRate })
-    const micStream = audioContext.createMediaStreamSource(mediaStream)
+    this.inputStream = audioContext.createMediaStreamSource(mediaStream)
     const recorder = audioContext.createScriptProcessor.call(
       audioContext,
       this.bufferSize,
@@ -39,7 +34,6 @@ export class WebMicrophone extends EventEmitter {
     )
 
     recorder.onaudioprocess = this.handleData
-    micStream.connect(recorder)
     this.audioContext = audioContext
     this.recorder = recorder
   }
@@ -57,12 +51,20 @@ export class WebMicrophone extends EventEmitter {
   async start() {
     console.log('starting mic')
     this.active = true
+    this.inputStream.connect(this.recorder)
     this.recorder.connect(this.audioContext.destination)
   }
 
   stop() {
     console.log('stopping mic')
     this.active = false
+    this.inputStream.disconnect()
     this.recorder.disconnect()
+  }
+
+  destroy() {
+    this.inputStream.disconnect()
+    this.recorder.disconnect()
+    this.audioContext.close()
   }
 }
