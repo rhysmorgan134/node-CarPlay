@@ -88,7 +88,7 @@ function App() {
       const device = request ? await requestDevice() : await findDevice()
       if (device) {
         setNoDevice(false)
-        carplay.start()
+        carplay.start(device)
       } else {
         setNoDevice(true)
       }

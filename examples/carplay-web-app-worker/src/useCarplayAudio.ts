@@ -19,11 +19,13 @@ const defaultNavVolume = 0.5
 
 const useCarplayAudio = (worker: CarPlayWorker) => {
   const [mic, setMic] = useState<WebMicrophone | null>(null)
-  const [audioPlayers] = useState(new Map<AudioFormat, PCMPlayer>())
+  const [audioPlayers] = useState(new Map<string, PCMPlayer>())
 
   const getAudioPlayer = useCallback(
     (format: AudioFormat): PCMPlayer => {
-      let player = audioPlayers.get(format)
+      //TODO: need to use key as objects here wont have the same reference as in direct approach
+      const key = `${format.frequency}_${format.bitrate}_${format.channel}`
+      let player = audioPlayers.get(key)
       if (player) return player
       player = new PCMPlayer({
         channels: format.channel,
@@ -33,7 +35,7 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
         onstatechange: emptyFunc,
         onended: emptyFunc,
       })
-      audioPlayers.set(format, player)
+      audioPlayers.set(key, player)
       player.volume(defaultAudioVolume)
       return player
     },

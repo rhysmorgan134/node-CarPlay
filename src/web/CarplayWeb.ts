@@ -18,12 +18,6 @@ export type CarplayMessage =
   | { type: 'video'; message: VideoData }
   | { type: 'media'; message: MediaData }
 
-export enum StartResult {
-  Initialised,
-  RequiresPermission,
-  FailedtoStart,
-}
-
 export const isCarplayDongle = (device: USBDevice) => {
   const known = knownDevices.some(
     kd => kd.productId === device.productId && kd.vendorId === device.vendorId,
@@ -58,7 +52,6 @@ export const requestDevice = async (): Promise<USBDevice | null> => {
 }
 
 export default class CarplayWeb {
-  private _starting: boolean = false
   private _started: boolean = false
   private _pairTimeout: NodeJS.Timeout | null = null
   public dongleDriver: DongleDriver
@@ -96,27 +89,13 @@ export default class CarplayWeb {
 
   public onmessage: ((ev: CarplayMessage) => void) | null = null
 
-  start = async () => {
-    if (this._starting || this._started) return
-    this._starting = true
-    const device = await findDevice()
-    if (device) {
-      try {
-        await this.dongleDriver.initialise(device)
-        this._started = true
-        this._starting = false
-        return StartResult.Initialised
-      } catch {
-        this._starting = false
-        return StartResult.FailedtoStart
-      }
-    }
-    this._starting = false
-    return StartResult.RequiresPermission
+  start = async (usbDevice: USBDevice)  => {
+    if (this._started) return
+    await this.dongleDriver.initialise(usbDevice)
+    this._started = true
   }
 
   stop = async () => {
-    if (this._starting || this._started) return
     try {
       await this.dongleDriver.close()
     } catch (err) {

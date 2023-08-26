@@ -3,6 +3,7 @@ import CarplayWeb, {
   DongleConfig,
   SendAudio,
   SendTouch,
+  findDevice,
 } from 'node-carplay/dist/web'
 import { Command } from './types'
 
@@ -18,10 +19,12 @@ onmessage = async (event: MessageEvent<Command>) => {
     case 'start':
       if (carplayWeb) return
       config = event.data.payload
-      carplayWeb = new CarplayWeb(config)
-      carplayWeb.onmessage = handleMessage
-
-      carplayWeb.start()
+      const device = await findDevice()
+      if (device) {
+        carplayWeb = new CarplayWeb(config)
+        carplayWeb.onmessage = handleMessage
+        carplayWeb.start(device)
+      }
       break
     case 'touch':
       if (config && carplayWeb) {
