@@ -75,7 +75,7 @@ const useCarplayAudio = (carplay: CarplayWeb) => {
     [getAudioPlayer, mic],
   )
 
-  // audio init
+  // microphone init
   useEffect(() => {
     const initMic = async () => {
       try {
@@ -94,12 +94,15 @@ const useCarplayAudio = (carplay: CarplayWeb) => {
     }
 
     initMic()
+  }, [carplay.dongleDriver])
 
+  // cleanup
+  useEffect(() => {
     return () => {
       audioPlayers.forEach(p => p.destroy())
       mic?.destroy()
     }
-  }, [audioPlayers, carplay])
+  }, [audioPlayers, mic])
 
   return { processAudio }
 }

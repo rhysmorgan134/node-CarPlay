@@ -89,7 +89,7 @@ export default class CarplayWeb {
 
   public onmessage: ((ev: CarplayMessage) => void) | null = null
 
-  start = async (usbDevice: USBDevice)  => {
+  start = async (usbDevice: USBDevice) => {
     if (this._started) return
     await this.dongleDriver.initialise(usbDevice)
     this._started = true

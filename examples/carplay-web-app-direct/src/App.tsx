@@ -28,11 +28,7 @@ function App() {
   const [receivingVideo, setReceivingVideo] = useState(false)
   const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
 
-  const carplay = useMemo(
-    () =>
-      new CarplayWeb(config),
-    [],
-  )
+  const carplay = useMemo(() => new CarplayWeb(config), [])
 
   const { processAudio } = useCarplayAudio(carplay)
 
@@ -140,7 +136,9 @@ function App() {
       }
 
       const { offsetX: x, offsetY: y } = e.nativeEvent
-      carplay.dongleDriver.send(new SendTouch(x / config.width, y / config.height, action))
+      carplay.dongleDriver.send(
+        new SendTouch(x / config.width, y / config.height, action),
+      )
     },
     [carplay, pointerdown],
   )
