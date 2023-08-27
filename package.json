@@ -8,8 +8,8 @@
   },
   "scripts": {
     "start:node": "ts-node ./scripts/startNode.ts",
-    "test": "jest",
-    "coverage": "jest --coverage",
+    "test": "jest --silent",
+    "coverage": "jest --silent --coverage",
     "build:node": "tsc --build",
     "build:web": "tsc --build ./src/web/tsconfig.json",
     "clean": "tsc --build --clean",

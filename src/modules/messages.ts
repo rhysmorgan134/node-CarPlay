@@ -231,7 +231,7 @@ type DecodeTypeMapping = {
   [key: number]: AudioFormat
 }
 
-const decodeTypeMap: DecodeTypeMapping = {
+export const decodeTypeMap: DecodeTypeMapping = {
   1: {
     frequency: 44100,
     channel: 2,

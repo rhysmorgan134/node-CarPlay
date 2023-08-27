@@ -1,4 +1,6 @@
 import {
+  AudioCommand,
+  AudioData,
   BluetoothAddress,
   BluetoothDeviceName,
   BluetoothPIN,
@@ -11,6 +13,8 @@ import {
   Plugged,
   SoftwareVersion,
   Unplugged,
+  VideoData,
+  decodeTypeMap,
 } from '../messages'
 
 describe('MessageHeader', () => {
@@ -165,5 +169,74 @@ describe('Plugged Message', () => {
     expect(message instanceof Plugged).toBeTruthy()
     expect((message as Plugged).phoneType).toBe(3)
     expect((message as Plugged).wifi).toBeUndefined()
+  })
+})
+
+describe('AudioData Message', () => {
+  it('constructs message with raw audio data', () => {
+    const data = Buffer.alloc(512)
+    data.writeUInt32LE(1, 0)
+    data.writeFloatLE(0.5, 4)
+    data.writeUInt32LE(1, 8)
+    const header = new MessageHeader(data.length, MessageType.AudioData)
+    const message = header.toMessage(data)
+    expect(message instanceof AudioData).toBeTruthy()
+    expect((message as AudioData).format).toBe(decodeTypeMap[1])
+    expect((message as AudioData).volume).toBe(0.5)
+    expect((message as AudioData).audioType).toBe(1)
+    expect((message as AudioData).data).toStrictEqual(data.subarray(12))
+  })
+
+  it('constructs message with volume duration', () => {
+    const data = Buffer.alloc(16)
+    data.writeUInt32LE(1, 0)
+    data.writeFloatLE(0.5, 4)
+    data.writeUInt32LE(1, 8)
+    data.writeUInt32LE(5, 12)
+    const header = new MessageHeader(data.length, MessageType.AudioData)
+    const message = header.toMessage(data)
+    expect(message instanceof AudioData).toBeTruthy()
+    expect((message as AudioData).format).toBe(decodeTypeMap[1])
+    expect((message as AudioData).volume).toBe(0.5)
+    expect((message as AudioData).audioType).toBe(1)
+    expect((message as AudioData).volumeDuration).toBe(5)
+    expect((message as AudioData).data).toBeUndefined()
+  })
+
+  it('constructs message with command', () => {
+    const data = Buffer.alloc(13)
+    data.writeUInt32LE(1, 0)
+    data.writeFloatLE(0.5, 4)
+    data.writeUInt32LE(1, 8)
+    data.writeInt8(1, 12)
+    const header = new MessageHeader(data.length, MessageType.AudioData)
+    const message = header.toMessage(data)
+    expect(message instanceof AudioData).toBeTruthy()
+    expect((message as AudioData).format).toBe(decodeTypeMap[1])
+    expect((message as AudioData).volume).toBe(0.5)
+    expect((message as AudioData).audioType).toBe(1)
+    expect((message as AudioData).command).toBe(AudioCommand.AudioOutputStart)
+    expect((message as AudioData).volumeDuration).toBeUndefined()
+    expect((message as AudioData).data).toBeUndefined()
+  })
+})
+
+describe('VideoData Message', () => {
+  it('constructs message with correct values', () => {
+    const data = Buffer.alloc(512)
+    data.writeUInt32LE(800, 0)
+    data.writeUInt32LE(600, 4)
+    data.writeUInt32LE(1, 8)
+    data.writeUInt32LE(10, 12)
+    data.writeUInt32LE(2, 16)
+    const header = new MessageHeader(data.length, MessageType.VideoData)
+    const message = header.toMessage(data)
+    expect(message instanceof VideoData).toBeTruthy()
+    expect((message as VideoData).width).toBe(800)
+    expect((message as VideoData).height).toBe(600)
+    expect((message as VideoData).flags).toBe(1)
+    expect((message as VideoData).length).toBe(10)
+    expect((message as VideoData).unknown2).toBe(2)
+    expect((message as VideoData).data).toStrictEqual(data.subarray(20))
   })
 })
