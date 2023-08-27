@@ -2,6 +2,7 @@ import { DongleConfig } from './DongleDriver'
 
 export enum KeyMapping {
   invalid = 0, //'invalid',
+  car = 3, //'Carplay Interface My Car button clicked',
   siri = 5, //'Siri Button',
   mic = 7, //'Car Microphone',
   left = 100, //'Button Left',
@@ -98,6 +99,7 @@ export class MessageHeader {
         case MessageType.Plugged:
           return new Plugged(this, data)
         default:
+          console.debug(`Unknown message type: ${type}`)
           return null
       }
     } else {
@@ -105,6 +107,7 @@ export class MessageHeader {
         case MessageType.Unplugged:
           return new Unplugged(this)
         default:
+          console.debug(`Unknown message type: ${type}`)
           return null
       }
     }
@@ -313,31 +316,41 @@ export class VideoData extends Message {
   }
 }
 
+enum MediaType {
+  Data = 1,
+  AlbumCover = 3
+}
+
 export class MediaData extends Message {
-  media?: string
+  payload?: {
+    type: MediaType.Data,
+    media: {
+      MediaSongName?: string
+      MediaAlbumName?: string
+      MediaArtistName ?: string
+      MediaAPPName ?: string
+      MediaSongDuration?: number
+      MediaSongPlayTime?: number
+    }
+  } | { type: MediaType.AlbumCover, base64Image: string }
 
   constructor(header: MessageHeader, data: Buffer) {
     super(header)
-    if (data.length > 512) {
-      const jfifMarker = Buffer.from([
-        0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
-      ])
-      const start = data.indexOf(jfifMarker)
-
-      if (start !== -1) {
-        const endMarker = Buffer.from([0xff, 0xd9])
-        const end = data.indexOf(endMarker, start + jfifMarker.length)
-
-        if (end === -1) console.log('Unable to find end of the buffer')
-
-        const jfifBuffer = data.subarray(start, end + endMarker.length)
-        this.media = `{"MediaAlbumCover": "${jfifBuffer.toString('base64')}"}`
-      } else {
-        console.log('Unable to find start of the buffer')
+    const type = data.readUInt32LE(0)
+    if (type === MediaType.AlbumCover) {
+      const imageData = data.subarray(4)
+      this.payload = {
+        type,
+        base64Image: imageData.toString('base64')
+      }
+    } else if (type === MediaType.Data) {
+      const mediaData = data.subarray(4, data.length - 1)
+      this.payload = {
+        type,
+        media: JSON.parse(mediaData.toString('utf8'))
       }
     } else {
-      const cleanData = data.subarray(8, data.length - 1)
-      this.media = cleanData.toString('utf8')
+      console.info(`Unexpected media type: ${type}`)
     }
   }
 }

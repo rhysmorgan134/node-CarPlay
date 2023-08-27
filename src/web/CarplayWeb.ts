@@ -6,6 +6,7 @@ import {
   AudioData,
   MediaData,
   SendCarPlay,
+  CarPlay,
 } from '../modules/messages'
 import { DongleDriver, DongleConfig } from '../modules'
 
@@ -17,6 +18,7 @@ export type CarplayMessage =
   | { type: 'audio'; message: AudioData }
   | { type: 'video'; message: VideoData }
   | { type: 'media'; message: MediaData }
+  | { type: 'carplay'; message: CarPlay }
 
 export const isCarplayDongle = (device: USBDevice) => {
   const known = knownDevices.some(
@@ -82,6 +84,8 @@ export default class CarplayWeb {
         this.onmessage?.({ type: 'audio', message })
       } else if (message instanceof MediaData) {
         this.onmessage?.({ type: 'media', message })
+      } else if (message instanceof CarPlay) {
+        this.onmessage?.({ type: 'carplay', message })
       }
     })
     this.dongleDriver = driver

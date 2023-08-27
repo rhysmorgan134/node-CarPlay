@@ -158,7 +158,7 @@ export class DongleDriver extends EventEmitter {
       }
 
       const message = header.toMessage(extraData)
-      this.emit('message', message)
+      if (message) this.emit('message', message)
     } catch (error) {
       if (error instanceof HeaderBuildError) {
         console.error(`Error parsing header for data`, error)
