@@ -42,7 +42,7 @@ export default class CarplayWS {
       await open(config)
 
       this._pairTimeout = setTimeout(() => {
-        console.log('no device, sending pair')
+        console.debug('no device, sending pair')
         send(new SendCarPlay('wifiPair'))
       }, 15000)
     })

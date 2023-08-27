@@ -205,7 +205,7 @@ export class Plugged extends Message {
     if (wifiAvail) {
       this.phoneType = data.readUInt32LE(0)
       this.wifi = data.readUInt32LE(4)
-      console.log(
+      console.debug(
         'wifi avail, phone type: ',
         this.phoneType,
         ' wifi: ',
@@ -213,7 +213,7 @@ export class Plugged extends Message {
       )
     } else {
       this.phoneType = data.readUInt32LE(0)
-      console.log('no wifi avail, phone type: ', this.phoneType)
+      console.debug('no wifi avail, phone type: ', this.phoneType)
     }
   }
 }
@@ -496,7 +496,7 @@ export class SendBoolean extends SendNumber {
 export class SendString extends SendFile {
   constructor(content: string, file: FileAddress) {
     if (content.length > 16) {
-      console.log('string too long')
+      console.error('string too long')
     }
     const message = Buffer.from(content, 'ascii')
     super(message, file)

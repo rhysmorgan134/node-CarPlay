@@ -63,7 +63,7 @@ export default class CarplayWeb {
     driver.on('ready', async () => {
       const { open } = driver
       this._pairTimeout = setTimeout(() => {
-        console.log('no device, sending pair')
+        console.debug('no device, sending pair')
         driver.send(new SendCarPlay('wifiPair'))
       }, 15000)
 
@@ -103,7 +103,7 @@ export default class CarplayWeb {
     try {
       await this.dongleDriver.close()
     } catch (err) {
-      console.log(err)
+      console.error(err)
     } finally {
       this._started = false
     }

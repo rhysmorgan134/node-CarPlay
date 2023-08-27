@@ -41,22 +41,19 @@ export class WebMicrophone extends EventEmitter {
   private handleData = async (ev: AudioProcessingEvent) => {
     if (!this.active) return
     const samples = ev.inputBuffer.getChannelData(0)
-
-    // we clone the samples a buffer is re-used
-    const pcmData = floatTo16BitPCM(new Float32Array(samples))
-
+    const pcmData = floatTo16BitPCM(samples)
     this.emit('data', Buffer.from(pcmData.buffer))
   }
 
   async start() {
-    console.log('starting mic')
+    console.debug('starting mic')
     this.active = true
     this.inputStream.connect(this.recorder)
     this.recorder.connect(this.audioContext.destination)
   }
 
   stop() {
-    console.log('stopping mic')
+    console.debug('stopping mic')
     this.active = false
     this.inputStream.disconnect()
     this.recorder.disconnect()
