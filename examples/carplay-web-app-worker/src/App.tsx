@@ -153,7 +153,11 @@ function App() {
   const isLoading = !noDevice && !receivingVideo
 
   return (
-    <div style={{ height: '100%' }} id={'main'} className="App">
+    <div
+      style={{ height: '100%', touchAction: 'none' }}
+      id={'main'}
+      className="App"
+    >
       {(noDevice || isLoading) && (
         <div
           style={{

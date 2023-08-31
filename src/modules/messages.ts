@@ -1,4 +1,5 @@
 import { DongleConfig } from './DongleDriver'
+import { clamp } from './utils'
 
 export enum KeyMapping {
   invalid = 0, //'invalid',
@@ -74,6 +75,18 @@ export class MessageHeader {
     return new MessageHeader(length, msgType)
   }
 
+  static serialiseWithData(messageType: MessageType, data: Buffer): Buffer {
+    const dataLen = Buffer.alloc(4)
+    dataLen.writeUInt32LE(Buffer.byteLength(data))
+    const type = Buffer.alloc(4)
+    type.writeUInt32LE(messageType)
+    const typeCheck = Buffer.alloc(4)
+    typeCheck.writeUInt32LE(((messageType ^ -1) & 0xffffffff) >>> 0)
+    const magicNumber = Buffer.alloc(4)
+    magicNumber.writeUInt32LE(MessageHeader.magic)
+    return Buffer.concat([magicNumber, dataLen, type, typeCheck])
+  }
+
   toMessage(data?: Buffer): Message | null {
     const { type } = this
     if (data) {
@@ -107,7 +120,7 @@ export class MessageHeader {
         case MessageType.Unplugged:
           return new Unplugged(this)
         default:
-          console.debug(`Unknown message type: ${type}`)
+          console.debug(`Unknown message type without data: ${type}`)
           return null
       }
     }
@@ -318,21 +331,23 @@ export class VideoData extends Message {
 
 enum MediaType {
   Data = 1,
-  AlbumCover = 3
+  AlbumCover = 3,
 }
 
 export class MediaData extends Message {
-  payload?: {
-    type: MediaType.Data,
-    media: {
-      MediaSongName?: string
-      MediaAlbumName?: string
-      MediaArtistName ?: string
-      MediaAPPName ?: string
-      MediaSongDuration?: number
-      MediaSongPlayTime?: number
-    }
-  } | { type: MediaType.AlbumCover, base64Image: string }
+  payload?:
+    | {
+        type: MediaType.Data
+        media: {
+          MediaSongName?: string
+          MediaAlbumName?: string
+          MediaArtistName?: string
+          MediaAPPName?: string
+          MediaSongDuration?: number
+          MediaSongPlayTime?: number
+        }
+      }
+    | { type: MediaType.AlbumCover; base64Image: string }
 
   constructor(header: MessageHeader, data: Buffer) {
     super(header)
@@ -341,13 +356,13 @@ export class MediaData extends Message {
       const imageData = data.subarray(4)
       this.payload = {
         type,
-        base64Image: imageData.toString('base64')
+        base64Image: imageData.toString('base64'),
       }
     } else if (type === MediaType.Data) {
       const mediaData = data.subarray(4, data.length - 1)
       this.payload = {
         type,
-        media: JSON.parse(mediaData.toString('utf8'))
+        media: JSON.parse(mediaData.toString('utf8')),
       }
     } else {
       console.info(`Unexpected media type: ${type}`)
@@ -368,14 +383,7 @@ export abstract class SendableMessage {
 
   serialise() {
     const data = this.getData()
-    const dataLen = this.getLength(data)
-    const type = Buffer.alloc(4)
-    type.writeUInt32LE(this.type)
-    const typeCheck = Buffer.alloc(4)
-    typeCheck.writeUInt32LE(((this.type ^ -1) & 0xffffffff) >>> 0)
-    const magicNumber = Buffer.alloc(4)
-    magicNumber.writeUInt32LE(MessageHeader.magic)
-    const header = Buffer.concat([magicNumber, dataLen, type, typeCheck])
+    const header = MessageHeader.serialiseWithData(this.type, data)
     return [header, data]
   }
 }
@@ -414,8 +422,12 @@ export class SendTouch extends SendableMessage {
     const yB = Buffer.alloc(4)
     const flags = Buffer.alloc(4)
     actionB.writeUInt32LE(this.action)
-    xB.writeUInt32LE(10000 * this.x)
-    yB.writeUInt32LE(10000 * this.y)
+
+    const finalX = clamp(10000 * this.x, 0, 10000)
+    const finalY = clamp(10000 * this.y, 0, 10000)
+
+    xB.writeUInt32LE(finalX)
+    yB.writeUInt32LE(finalY)
     const data = Buffer.concat([actionB, xB, yB, flags])
     return data
   }

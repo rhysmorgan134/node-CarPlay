@@ -1,5 +1,5 @@
 import { DongleDriver, DEFAULT_CONFIG, DriverStateError } from '../DongleDriver'
-import { SendCarPlay } from '../messages'
+import { MessageHeader, MessageType, SendCarPlay } from '../messages'
 import {
   usbDeviceFactory,
   deviceConfig,
