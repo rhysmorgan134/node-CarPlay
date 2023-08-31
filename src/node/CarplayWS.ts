@@ -1,6 +1,6 @@
-import { Server } from 'socket.io'
 import { webusb } from 'usb'
 import NodeMicrophone from './NodeMicrophone'
+import EventEmitter from 'events'
 import {
   AudioData,
   Key,
@@ -17,20 +17,13 @@ import {
   DEFAULT_CONFIG,
 } from '../modules'
 
-export default class CarplayWS {
+export default class CarplayWS extends EventEmitter{
   private _pairTimeout: NodeJS.Timeout | null = null
   private _plugged = false
   private _dongleDriver: DongleDriver
-  private _io: Server
 
   constructor(config: DongleConfig = DEFAULT_CONFIG, port = 5005) {
-    this._io = new Server(port, {
-      cors: {
-        origin: '*',
-        methods: ['GET', 'POST'],
-        credentials: true,
-      },
-    })
+    super()
     const mic = new NodeMicrophone()
     const driver = new DongleDriver()
     mic.on('data', data => {
@@ -56,29 +49,24 @@ export default class CarplayWS {
         this.emitPlugged()
       } else if (message instanceof Unplugged) {
         this._plugged = false
-        this._io.emit('quit')
+        this.emit('quit')
       } else if (message instanceof VideoData) {
-        this._io.emit('carplay', message)
+        this.emit('carplay', message)
       } else if (message instanceof AudioData) {
-        this._io.emit('audio', message)
+        this.emit('audio', message)
       } else if (message instanceof MediaData) {
-        this._io.emit('media', message)
+        this.emit('media', message)
       }
     })
     this._dongleDriver = driver
-    this._io.on('connection', socket => {
-      console.log('carplay connection')
-      socket.on('statusReq', () => {
-        console.log('status request')
-        this.emitPlugged()
-      })
-      socket.on(
-        'click',
-        ({ type, x, y }: { type: number; x: number; y: number }) => {
-          this._dongleDriver.send(new SendTouch(x, y, type))
-        },
-      )
-    })
+  }
+
+  getStatus = () => {
+    this.emitPlugged()
+  }
+
+  sendTouch = ({ type, x, y }: { type: number; x: number; y: number }) => {
+    this._dongleDriver.send(new SendTouch(x, y, type))
   }
 
   start = async () => {
@@ -105,7 +93,7 @@ export default class CarplayWS {
   }
 
   private emitPlugged = () => {
-    this._io.emit('status', {
+    this.emit('status', {
       status: this._plugged,
     })
   }
