@@ -1,5 +1,14 @@
 import { DongleDriver, DEFAULT_CONFIG, DriverStateError } from '../DongleDriver'
-import { MessageHeader, MessageType, SendCarPlay } from '../messages'
+import {
+  FileAddress,
+  HeartBeat,
+  SendBoolean,
+  SendCarPlay,
+  SendNumber,
+  SendOpen,
+  SendString,
+  SendableMessage,
+} from '../messages'
 import {
   usbDeviceFactory,
   deviceConfig,
@@ -7,7 +16,22 @@ import {
   usbEndpoint,
 } from './mocks/usbMocks'
 
+jest.useFakeTimers()
+jest.spyOn(global, 'setTimeout')
+jest.spyOn(global, 'setInterval')
+
+const expectMessageSent = (device: USBDevice, message: SendableMessage) => {
+  expect(device.transferOut).toHaveBeenCalledWith(
+    1,
+    Buffer.concat(message.serialise()),
+  )
+}
+
 describe('DongleDriver', () => {
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
+
   describe('Initialise method', () => {
     it('returns if device is already open', async () => {
       const driver = new DongleDriver()
@@ -116,7 +140,48 @@ describe('DongleDriver', () => {
       const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
       await driver.open(DEFAULT_CONFIG)
-      expect(device.transferOut).toHaveBeenCalledTimes(7)
+
+      expectMessageSent(
+        device,
+        new SendNumber(DEFAULT_CONFIG.dpi, FileAddress.DPI),
+      )
+      expectMessageSent(device, new SendOpen(DEFAULT_CONFIG))
+      expectMessageSent(
+        device,
+        new SendBoolean(DEFAULT_CONFIG.nightMode, FileAddress.NIGHT_MODE),
+      )
+      expectMessageSent(
+        device,
+        new SendBoolean(false, FileAddress.HAND_DRIVE_MODE),
+      )
+      expectMessageSent(device, new SendBoolean(true, FileAddress.CHARGE_MODE))
+      expectMessageSent(
+        device,
+        new SendString(DEFAULT_CONFIG.boxName, FileAddress.BOX_NAME),
+      )
+      expectMessageSent(device, new SendCarPlay('wifiEn'))
+
+      jest.runOnlyPendingTimers()
+
+      // delayed wifi connect and interval messages
+      expectMessageSent(device, new SendCarPlay('wifiConnect'))
+      expectMessageSent(device, new HeartBeat())
+      expectMessageSent(device, new SendCarPlay('frame'))
+    })
+
+    it('sets up correct timeouts and intervals when device is open', async () => {
+      const driver = new DongleDriver()
+      const device = usbDeviceFactory({ opened: true })
+      await driver.initialise(device)
+      await driver.open(DEFAULT_CONFIG)
+      jest.runOnlyPendingTimers()
+      // wifi connect
+      expect(setTimeout).toHaveBeenCalledTimes(1)
+      expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 1000)
+      // frame and heartbeat intervals
+      expect(setInterval).toHaveBeenCalledTimes(2)
+      expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 2000)
+      expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 5000)
     })
   })
 

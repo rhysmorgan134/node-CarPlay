@@ -24,6 +24,7 @@
     "web-vitals": "^3.4.0"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/jmuxer": "^2.0.3",
     "react-app-rewired": "^2.2.1"
   },
