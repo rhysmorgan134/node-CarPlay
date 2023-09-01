@@ -1,5 +1,5 @@
-import { DongleConfig } from '../src/modules/IDongleDriver'
-import CarplayWS from '../src/node/CarplayWS'
+import { DongleConfig } from '../src/modules/DongleDriver'
+import CarplayNode from '../src/node/CarplayNode'
 const config: DongleConfig = {
   dpi: 160,
   nightMode: false,
@@ -10,5 +10,5 @@ const config: DongleConfig = {
   fps: 20,
 }
 
-const carplay = new CarplayWS(config)
+const carplay = new CarplayNode(config)
 carplay.start()

@@ -1,3 +1,3 @@
-import CarplayWS from './CarplayWS'
+import CarplayNode from './CarplayNode'
 
-export default CarplayWS
+export default CarplayNode

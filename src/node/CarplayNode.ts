@@ -17,12 +17,12 @@ import {
   DEFAULT_CONFIG,
 } from '../modules'
 
-export default class CarplayWS extends EventEmitter{
+export default class CarplayWS extends EventEmitter {
   private _pairTimeout: NodeJS.Timeout | null = null
   private _plugged = false
   private _dongleDriver: DongleDriver
 
-  constructor(config: DongleConfig = DEFAULT_CONFIG, port = 5005) {
+  constructor(config: DongleConfig = DEFAULT_CONFIG) {
     super()
     const mic = new NodeMicrophone()
     const driver = new DongleDriver()
