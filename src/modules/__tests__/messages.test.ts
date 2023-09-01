@@ -4,8 +4,10 @@ import {
   BluetoothAddress,
   BluetoothDeviceName,
   BluetoothPIN,
+  BluetoothPairedList,
   CarPlay,
   HeaderBuildError,
+  HiCarLink,
   KeyMapping,
   ManufacturerInfo,
   MessageHeader,
@@ -17,6 +19,7 @@ import {
   TouchAction,
   Unplugged,
   VideoData,
+  WifiDeviceName,
   decodeTypeMap,
 } from '../messages'
 
@@ -122,14 +125,14 @@ describe('Readable Messages', () => {
 
   describe('BluetoothAddress Message', () => {
     it('constructs message with correct values', () => {
-      const data = Buffer.from('address 1')
+      const data = Buffer.from('00:11:22:33:FF:EE')
       const header = new MessageHeader(
         data.length,
         MessageType.BluetoothAddress,
       )
       const message = header.toMessage(data)
       expect(message instanceof BluetoothAddress).toBeTruthy()
-      expect((message as BluetoothAddress).address).toBe('address 1')
+      expect((message as BluetoothAddress).address).toBe('00:11:22:33:FF:EE')
     })
   })
 
@@ -153,6 +156,41 @@ describe('Readable Messages', () => {
       const message = header.toMessage(data)
       expect(message instanceof BluetoothDeviceName).toBeTruthy()
       expect((message as BluetoothDeviceName).name).toBe('device 1')
+    })
+  })
+
+  describe('HiCarLink Message', () => {
+    it('constructs message with correct values', () => {
+      const data = Buffer.from('hicar://some-link')
+      const header = new MessageHeader(data.length, MessageType.HiCarLink)
+      const message = header.toMessage(data)
+      expect(message instanceof HiCarLink).toBeTruthy()
+      expect((message as HiCarLink).link).toBe('hicar://some-link')
+    })
+  })
+
+  describe('BluetoothPairedList Message', () => {
+    it('constructs message with correct values', () => {
+      const data = Buffer.from('00:11:22:33:FF:EETest')
+      const header = new MessageHeader(
+        data.length,
+        MessageType.BluetoothPairedList,
+      )
+      const message = header.toMessage(data)
+      expect(message instanceof BluetoothPairedList).toBeTruthy()
+      expect((message as BluetoothPairedList).data).toBe(
+        '00:11:22:33:FF:EETest',
+      )
+    })
+  })
+
+  describe('WifiDeviceName Message', () => {
+    it('constructs message with correct values', () => {
+      const data = Buffer.from('00:11:22:33:FF:EE')
+      const header = new MessageHeader(data.length, MessageType.WifiDeviceName)
+      const message = header.toMessage(data)
+      expect(message instanceof WifiDeviceName).toBeTruthy()
+      expect((message as WifiDeviceName).name).toBe('00:11:22:33:FF:EE')
     })
   })
 
@@ -243,7 +281,7 @@ describe('Readable Messages', () => {
       expect((message as VideoData).height).toBe(600)
       expect((message as VideoData).flags).toBe(1)
       expect((message as VideoData).length).toBe(10)
-      expect((message as VideoData).unknown2).toBe(2)
+      expect((message as VideoData).unknown).toBe(2)
       expect((message as VideoData).data).toStrictEqual(data.subarray(20))
     })
   })

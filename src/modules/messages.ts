@@ -43,6 +43,7 @@ export enum MessageType {
   WifiDeviceName = 0x0e,
   BluetoothPairedList = 0x12,
   MediaData = 0x2a,
+  HiCarLink = 0x18,
 }
 
 export class HeaderBuildError extends Error {}
@@ -111,6 +112,12 @@ export class MessageHeader {
           return new CarPlay(this, data)
         case MessageType.Plugged:
           return new Plugged(this, data)
+        case MessageType.WifiDeviceName:
+          return new WifiDeviceName(this, data)
+        case MessageType.HiCarLink:
+          return new HiCarLink(this, data)
+        case MessageType.BluetoothPairedList:
+          return new BluetoothPairedList(this, data)
         default:
           console.debug(`Unknown message type: ${type}`)
           return null
@@ -205,6 +212,33 @@ export class BluetoothDeviceName extends Message {
   constructor(header: MessageHeader, data: Buffer) {
     super(header)
     this.name = data.toString('ascii')
+  }
+}
+
+export class WifiDeviceName extends Message {
+  name: string
+
+  constructor(header: MessageHeader, data: Buffer) {
+    super(header)
+    this.name = data.toString('ascii')
+  }
+}
+
+export class HiCarLink extends Message {
+  link: string
+
+  constructor(header: MessageHeader, data: Buffer) {
+    super(header)
+    this.link = data.toString('ascii')
+  }
+}
+
+export class BluetoothPairedList extends Message {
+  data: string
+
+  constructor(header: MessageHeader, data: Buffer) {
+    super(header)
+    this.data = data.toString('ascii')
   }
 }
 
@@ -315,7 +349,7 @@ export class VideoData extends Message {
   height: number
   flags: number
   length: number
-  unknown2: number
+  unknown: number
   data: Buffer
 
   constructor(header: MessageHeader, data: Buffer) {
@@ -324,7 +358,7 @@ export class VideoData extends Message {
     this.height = data.readUInt32LE(4)
     this.flags = data.readUInt32LE(8)
     this.length = data.readUInt32LE(12)
-    this.unknown2 = data.readUInt32LE(16)
+    this.unknown = data.readUInt32LE(16)
     this.data = data.subarray(20)
   }
 }
