@@ -3,6 +3,7 @@ import {
   FileAddress,
   HeartBeat,
   SendBoolean,
+  SendBoxSettings,
   SendCarPlay,
   SendNumber,
   SendOpen,
@@ -159,6 +160,7 @@ describe('DongleDriver', () => {
         device,
         new SendString(DEFAULT_CONFIG.boxName, FileAddress.BOX_NAME),
       )
+      expectMessageSent(device, new SendBoxSettings(DEFAULT_CONFIG.mediaDelay))
       expectMessageSent(device, new SendCarPlay('wifiEn'))
 
       jest.runOnlyPendingTimers()

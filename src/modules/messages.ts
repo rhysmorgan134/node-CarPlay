@@ -44,6 +44,7 @@ export enum MessageType {
   BluetoothPairedList = 0x12,
   MediaData = 0x2a,
   HiCarLink = 0x18,
+  BoxSettings = 0x19,
 }
 
 export class HeaderBuildError extends Error {}
@@ -591,5 +592,27 @@ export class SendOpen extends SendableMessage {
   constructor(config: DongleConfig) {
     super()
     this.config = config
+  }
+}
+
+export class SendBoxSettings extends SendableMessage {
+  type = MessageType.BoxSettings
+  mediaDelay: number
+  syncTime: number
+
+  getData(): Buffer {
+    return Buffer.from(
+      JSON.stringify({ mediaDelay: this.mediaDelay, syncTime: this.syncTime }),
+      'ascii',
+    )
+  }
+
+  constructor(
+    mediaDelay: number = 300,
+    syncTime = Math.round(Date.now() / 1000),
+  ) {
+    super()
+    this.mediaDelay = mediaDelay
+    this.syncTime = syncTime
   }
 }

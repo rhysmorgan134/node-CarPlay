@@ -9,6 +9,7 @@ import {
   SendBoolean,
   SendNumber,
   SendOpen,
+  SendBoxSettings,
 } from './messages'
 import EventEmitter from 'events'
 
@@ -23,6 +24,7 @@ export type DongleConfig = {
   nightMode: boolean
   boxName: string
   hand: number
+  mediaDelay: number
 }
 
 export const DEFAULT_CONFIG: DongleConfig = {
@@ -33,6 +35,7 @@ export const DEFAULT_CONFIG: DongleConfig = {
   boxName: 'nodePlay',
   nightMode: false,
   hand: 0,
+  mediaDelay: 300,
 }
 
 export class DriverStateError extends Error {}
@@ -180,7 +183,12 @@ export class DongleDriver extends EventEmitter {
     }
 
     this.errorCount = 0
-    const { dpi: _dpi, nightMode: _nightMode, boxName: _boxName } = config
+    const {
+      dpi: _dpi,
+      nightMode: _nightMode,
+      boxName: _boxName,
+      mediaDelay,
+    } = config
     const initMessages = [
       new SendNumber(_dpi, FileAddress.DPI),
       new SendOpen(config),
@@ -188,6 +196,7 @@ export class DongleDriver extends EventEmitter {
       new SendBoolean(false, FileAddress.HAND_DRIVE_MODE),
       new SendBoolean(true, FileAddress.CHARGE_MODE),
       new SendString(_boxName, FileAddress.BOX_NAME),
+      new SendBoxSettings(mediaDelay),
       new SendCarPlay('wifiEn'),
     ]
     await Promise.all(initMessages.map(this.send))
