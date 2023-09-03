@@ -22,7 +22,7 @@ const config = async () => {
     const iconLabel = process.argv[2]
     if (iconLabel) {
       console.log(`Setting custom icon label ${iconLabel}`)
-      await driver.send(new SendIconConfig({ custom: true, label: iconLabel }))
+      await driver.send(new SendIconConfig({ label: iconLabel }))
     }
 
     const iconPath = process.argv[3]

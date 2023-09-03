@@ -643,10 +643,8 @@ export class SendLogoType extends SendableMessage {
     this.logoType = logoType
   }
 }
-
-type IconConfig = { custom: true; label: string } | { custom: false }
 export class SendIconConfig extends SendFile {
-  constructor(config: IconConfig) {
+  constructor(config: { label?: string }) {
     const valueMap: {
       oemIconVisible: number
       name: string
@@ -660,7 +658,7 @@ export class SendIconConfig extends SendFile {
       oemIconPath: FileAddress.OEM_ICON,
     }
 
-    if (config.custom) {
+    if (config.label) {
       valueMap.oemIconLabel = config.label
     }
 
