@@ -136,7 +136,7 @@ describe('DongleDriver', () => {
       expect(device.transferOut).toHaveBeenCalledTimes(0)
     })
 
-    it('returns and send open command to device when device is open', async () => {
+    it('returns and sends open commands to device when device is open', async () => {
       const driver = new DongleDriver()
       const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)

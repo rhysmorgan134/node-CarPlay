@@ -56,19 +56,12 @@ export const requestDevice = async (): Promise<USBDevice | null> => {
 export default class CarplayWeb {
   private _started: boolean = false
   private _pairTimeout: NodeJS.Timeout | null = null
+  private _config: DongleConfig
   public dongleDriver: DongleDriver
 
   constructor(config: DongleConfig) {
+    this._config = config
     const driver = new DongleDriver()
-    driver.on('ready', async () => {
-      const { open } = driver
-      this._pairTimeout = setTimeout(() => {
-        console.debug('no device, sending pair')
-        driver.send(new SendCarPlay('wifiPair'))
-      }, 15000)
-
-      await open(config)
-    })
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
         if (this._pairTimeout) {
@@ -95,7 +88,13 @@ export default class CarplayWeb {
 
   start = async (usbDevice: USBDevice) => {
     if (this._started) return
-    await this.dongleDriver.initialise(usbDevice)
+    const { initialise, open, send } = this.dongleDriver
+    await initialise(usbDevice)
+    await open(this._config)
+    this._pairTimeout = setTimeout(() => {
+      console.debug('no device, sending pair')
+      send(new SendCarPlay('wifiPair'))
+    }, 15000)
     this._started = true
   }
 

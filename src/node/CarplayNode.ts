@@ -21,23 +21,15 @@ export default class CarplayWS extends EventEmitter {
   private _pairTimeout: NodeJS.Timeout | null = null
   private _plugged = false
   private _dongleDriver: DongleDriver
+  private _config: DongleConfig
 
   constructor(config: DongleConfig = DEFAULT_CONFIG) {
     super()
+    this._config = config
     const mic = new NodeMicrophone()
     const driver = new DongleDriver()
     mic.on('data', data => {
       driver.send(new SendAudio(data))
-    })
-    driver.on('ready', async () => {
-      const { open, send } = driver
-
-      await open(config)
-
-      this._pairTimeout = setTimeout(() => {
-        console.debug('no device, sending pair')
-        send(new SendCarPlay('wifiPair'))
-      }, 15000)
     })
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
@@ -80,7 +72,13 @@ export default class CarplayWS extends EventEmitter {
     }
     let initialised = false
     try {
-      await this._dongleDriver.initialise(device)
+      const { initialise, open, send } = this._dongleDriver
+      await initialise(device)
+      await open(this._config)
+      this._pairTimeout = setTimeout(() => {
+        console.debug('no device, sending pair')
+        send(new SendCarPlay('wifiPair'))
+      }, 15000)
       initialised = true
     } catch (err) {
       console.error(err)

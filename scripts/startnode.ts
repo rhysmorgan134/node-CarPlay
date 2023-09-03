@@ -8,6 +8,7 @@ const config: DongleConfig = {
   width: 800,
   height: 600,
   fps: 20,
+  mediaDelay: 300,
 }
 
 const carplay = new CarplayNode(config)

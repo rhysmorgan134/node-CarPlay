@@ -76,8 +76,6 @@ export class DongleDriver extends EventEmitter {
         interfaceNumber,
         alternate: { endpoints },
       } = this._device.configuration.interfaces[0]
-      console.debug('claiming')
-      await this._device.claimInterface(interfaceNumber)
 
       const inEndpoint = endpoints.find(e => e.direction === 'in')
       const outEndpoint = endpoints.find(e => e.direction === 'out')
@@ -91,9 +89,11 @@ export class DongleDriver extends EventEmitter {
       }
       this._inEP = inEndpoint
       this._outEP = outEndpoint
-      console.debug(this._device)
 
-      this.emit('ready')
+      console.debug('claiming')
+      await this._device.claimInterface(interfaceNumber)
+
+      console.debug(this._device)
     } catch (err) {
       this.close()
       throw err

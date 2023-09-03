@@ -31,6 +31,7 @@ export enum MessageType {
   HeartBeat = 0xaa,
   ManufacturerInfo = 0x14,
   CarPlay = 0x08,
+  LogoType = 0x09,
   SoftwareVersion = 0xcc,
   BluetoothAddress = 0x0a,
   BluetoothPIN = 0x0c,
@@ -524,6 +525,11 @@ export enum FileAddress {
   HAND_DRIVE_MODE = '/tmp/hand_drive_mode',
   CHARGE_MODE = '/tmp/charge_mode',
   BOX_NAME = '/etc/box_name',
+  OEM_ICON = '/etc/oem_icon.png',
+  AIRPLAY_CONFIG = '/etc/airplay.conf',
+  ICON_120 = '/etc/icon_120x120.png',
+  ICON_180 = '/etc/icon_180x180.png',
+  ICON_250 = '/etc/icon_256x256.png',
 }
 
 export class SendNumber extends SendFile {
@@ -614,5 +620,54 @@ export class SendBoxSettings extends SendableMessage {
     super()
     this.mediaDelay = mediaDelay
     this.syncTime = syncTime
+  }
+}
+
+export enum LogoType {
+  HomeButton = 1,
+  Siri = 2,
+}
+
+export class SendLogoType extends SendableMessage {
+  type = MessageType.LogoType
+  logoType: LogoType
+
+  getData(): Buffer {
+    const data = Buffer.alloc(4)
+    data.writeUInt32LE(this.logoType)
+    return data
+  }
+
+  constructor(logoType: LogoType) {
+    super()
+    this.logoType = logoType
+  }
+}
+
+type IconConfig = { custom: true; label: string } | { custom: false }
+export class SendIconConfig extends SendFile {
+  constructor(config: IconConfig) {
+    const valueMap: {
+      oemIconVisible: number
+      name: string
+      model: string
+      oemIconPath: string
+      oemIconLabel?: string
+    } = {
+      oemIconVisible: 1,
+      name: 'AutoBox',
+      model: 'Magic-Car-Link-1.00',
+      oemIconPath: FileAddress.OEM_ICON,
+    }
+
+    if (config.custom) {
+      valueMap.oemIconLabel = config.label
+    }
+
+    const fileData = Object.entries(valueMap)
+      .map(e => `${e[0]} = ${e[1]}`)
+      .join('\n')
+
+    super(Buffer.from(fileData + '\n', 'ascii'), FileAddress.AIRPLAY_CONFIG)
   }
 }

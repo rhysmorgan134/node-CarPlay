@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start:node": "ts-node ./scripts/startNode.ts",
+    "config:icon": "ts-node ./scripts/configIcon.ts",
     "test": "jest --silent",
     "coverage": "jest --silent --coverage",
     "build:node": "tsc --build",
