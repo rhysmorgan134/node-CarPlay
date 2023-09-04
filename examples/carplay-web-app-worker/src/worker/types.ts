@@ -14,6 +14,6 @@ export type Command =
 
 export interface CarPlayWorker
   extends Omit<Worker, 'postMessage' | 'onmessage'> {
-  postMessage(message: Command): void
+  postMessage(message: Command, transfer?: Transferable[]): void
   onmessage: ((this: Worker, ev: CarplayWorkerMessage) => any) | null
 }

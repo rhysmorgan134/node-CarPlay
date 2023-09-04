@@ -1,8 +1,11 @@
 import CarplayWeb, {
+  AudioData,
   CarplayMessage,
   DongleConfig,
+  MediaData,
   SendAudio,
   SendTouch,
+  VideoData,
   findDevice,
 } from 'node-carplay/dist/web'
 import { Command } from './types'
@@ -11,7 +14,13 @@ let carplayWeb: CarplayWeb | null = null
 let config: DongleConfig | null = null
 
 const handleMessage = (message: CarplayMessage) => {
-  postMessage(message)
+  if (message instanceof VideoData) {
+    postMessage(message, '/', [message.data])
+  } else if (message instanceof AudioData && message.data) {
+    postMessage(message, '/', [message.data])
+  } else {
+    postMessage(message)
+  }
 }
 
 onmessage = async (event: MessageEvent<Command>) => {

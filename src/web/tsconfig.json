@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "ES6",
-    "lib": ["es2019", "DOM", "WebWorker"]
+    "module": "ES2020",
+    "moduleResolution": "NodeNext",
+    "lib": ["es2020", "DOM", "WebWorker"],
   },
   "exclude": ["../node/*"]
 }

@@ -1,58 +1,41 @@
 import { EventEmitter } from 'events'
 
-function floatTo16BitPCM(input: Float32Array) {
-  let i = input.length
-  const output = new Int16Array(i)
-  while (i--) {
-    const s = Math.max(-1, Math.min(1, input[i]))
-    output[i] = s < 0 ? s * 0x8000 : s * 0x7fff
-  }
-  return output
-}
-
 export class WebMicrophone extends EventEmitter {
   private active = false
-  private bufferSize = 2048
-  // Config values compatible with CarPlay dongle input
-  // 16 bit PCM mono audio at 16000 sample rate
   private sampleRate = 16000
-  private channels = 1
   private audioContext: AudioContext
   private inputStream: MediaStreamAudioSourceNode
-  // TODO: migrate to AudioWorklet
-  private recorder: ScriptProcessorNode
+  private recorder: AudioWorkletNode | null = null
 
   constructor(mediaStream: MediaStream) {
     super()
     const audioContext = new AudioContext({ sampleRate: this.sampleRate })
     this.inputStream = audioContext.createMediaStreamSource(mediaStream)
-    const recorder = audioContext.createScriptProcessor.call(
-      audioContext,
-      this.bufferSize,
-      this.channels,
-      this.channels,
-    )
-
-    recorder.onaudioprocess = this.handleData
     this.audioContext = audioContext
-    this.recorder = recorder
+    audioContext.audioWorklet
+      .addModule(new URL('./recorder.worklet.js', import.meta.url))
+      .then(() => {
+        this.recorder = new AudioWorkletNode(audioContext, 'recorder.worklet')
+        this.recorder.port.onmessage = this.handleData
+      })
   }
 
-  private handleData = async (ev: AudioProcessingEvent) => {
+  private handleData = async (e: { data: Int16Array }) => {
     if (!this.active) return
-    const samples = ev.inputBuffer.getChannelData(0)
-    const pcmData = floatTo16BitPCM(samples)
-    this.emit('data', Buffer.from(pcmData.buffer))
+    this.emit('data', Buffer.from(e.data.buffer))
   }
 
   async start() {
+    if (!this.recorder) return
     console.debug('starting mic')
     this.active = true
-    this.inputStream.connect(this.recorder)
-    this.recorder.connect(this.audioContext.destination)
+    this.inputStream
+      .connect(this.recorder)
+      .connect(this.audioContext.destination)
   }
 
   stop() {
+    if (!this.recorder) return
     console.debug('stopping mic')
     this.active = false
     this.inputStream.disconnect()
@@ -60,8 +43,10 @@ export class WebMicrophone extends EventEmitter {
   }
 
   destroy() {
+    if (!this.recorder) return
     this.inputStream.disconnect()
     this.recorder.disconnect()
+    this.recorder = null
     this.audioContext.close()
   }
 }

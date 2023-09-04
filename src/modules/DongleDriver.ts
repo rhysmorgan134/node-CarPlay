@@ -63,6 +63,7 @@ export class DongleDriver extends EventEmitter {
       console.debug('opening')
 
       await this._device.open()
+      await this._device.reset()
       await this._device.selectConfiguration(CONFIG_NUMBER)
 
       if (!this._device.configuration) {

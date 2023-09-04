@@ -23,7 +23,7 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
 
   const getAudioPlayer = useCallback(
     (format: AudioFormat): PCMPlayer => {
-      //TODO: need to use key as objects here wont have the same reference as in direct approach
+      // need to use key as objects here wont have the same reference as in direct approach
       const key = `${format.frequency}_${format.bitrate}_${format.channel}`
       let player = audioPlayers.get(key)
       if (player) return player
@@ -86,10 +86,13 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
         })
         const mic = new WebMicrophone(mediaStream)
         mic.on('data', payload => {
-          worker.postMessage({
-            type: 'microphoneInput',
-            payload,
-          })
+          worker.postMessage(
+            {
+              type: 'microphoneInput',
+              payload,
+            },
+            [payload.buffer],
+          )
         })
 
         setMic(mic)
