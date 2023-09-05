@@ -2,7 +2,6 @@ import CarplayWeb, {
   AudioData,
   CarplayMessage,
   DongleConfig,
-  MediaData,
   SendAudio,
   SendTouch,
   VideoData,

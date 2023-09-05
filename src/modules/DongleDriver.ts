@@ -125,53 +125,49 @@ export class DongleDriver extends EventEmitter {
   }
 
   private readLoop = async () => {
-    if (!this._device?.opened) {
-      return
-    }
-
-    // If we error out - stop loop, emit failure
-    if (this.errorCount >= MAX_ERROR_COUNT) {
-      this.close()
-      this.emit('failure')
-      return
-    }
-
-    try {
-      const headerData = await this._device?.transferIn(
-        this._inEP!.endpointNumber,
-        MessageHeader.dataLength,
-      )
-      const data = headerData?.data?.buffer
-      if (!data) {
-        throw new HeaderBuildError('Failed to read header data')
+    while (this._device?.opened) {
+      // If we error out - stop loop, emit failure
+      if (this.errorCount >= MAX_ERROR_COUNT) {
+        this.close()
+        this.emit('failure')
+        return
       }
-      const header = MessageHeader.fromBuffer(Buffer.from(data))
-      let extraData: Buffer | undefined = undefined
-      if (header.length) {
-        const extraDataRes = (
-          await this._device?.transferIn(
-            this._inEP!.endpointNumber,
-            header.length,
-          )
-        )?.data?.buffer
-        if (!extraDataRes) {
-          console.error('Failed to read extra data')
-          return
+
+      try {
+        const headerData = await this._device?.transferIn(
+          this._inEP!.endpointNumber,
+          MessageHeader.dataLength,
+        )
+        const data = headerData?.data?.buffer
+        if (!data) {
+          throw new HeaderBuildError('Failed to read header data')
         }
-        extraData = Buffer.from(extraDataRes)
-      }
+        const header = MessageHeader.fromBuffer(Buffer.from(data))
+        let extraData: Buffer | undefined = undefined
+        if (header.length) {
+          const extraDataRes = (
+            await this._device?.transferIn(
+              this._inEP!.endpointNumber,
+              header.length,
+            )
+          )?.data?.buffer
+          if (!extraDataRes) {
+            console.error('Failed to read extra data')
+            return
+          }
+          extraData = Buffer.from(extraDataRes)
+        }
 
-      const message = header.toMessage(extraData)
-      if (message) this.emit('message', message)
-    } catch (error) {
-      if (error instanceof HeaderBuildError) {
-        console.error(`Error parsing header for data`, error)
-      } else {
-        console.error(`Unexpected Error parsing header for data`, error)
+        const message = header.toMessage(extraData)
+        if (message) this.emit('message', message)
+      } catch (error) {
+        if (error instanceof HeaderBuildError) {
+          console.error(`Error parsing header for data`, error)
+        } else {
+          console.error(`Unexpected Error parsing header for data`, error)
+        }
+        this.errorCount++
       }
-      this.errorCount++
-    } finally {
-      this.readLoop()
     }
   }
 

@@ -151,6 +151,8 @@ export enum AudioCommand {
   AudioSiriStop = 9,
   AudioMediaStart = 10,
   AudioMediaStop = 11,
+  AudioAlertStart = 12,
+  AudioAlertStop = 13,
 }
 
 export abstract class Message {
