@@ -8,7 +8,6 @@ lerna-debug.log*
 .pnpm-debug.log*
 .apk
 *.apk
-modules/assets/
 .idea
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
@@ -54,6 +53,9 @@ web_modules/
 
 # Optional npm cache directory
 .npm
+
+# package-lock
+package-lock.json
 
 # Optional eslint cache
 .eslintcache

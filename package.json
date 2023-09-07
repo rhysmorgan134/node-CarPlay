@@ -1,10 +1,22 @@
 {
   "name": "node-carplay",
-  "version": "3.0.9",
+  "version": "4.0.0",
   "description": "",
-  "main": "index.js",
+  "exports": {
+    "./dist/node": "./dist/node/index.js",
+    "./dist/web": "./dist/web/index.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start:node": "ts-node ./scripts/startNode.ts",
+    "config:icon": "ts-node ./scripts/configIcon.ts",
+    "test": "jest --silent",
+    "coverage": "jest --silent --coverage",
+    "build:node": "tsc --build",
+    "build:web": "tsc --build ./src/web/tsconfig.json",
+    "clean": "tsc --build --clean",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --ext .js,.ts,.tsx .",
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|tsx|json)\""
   },
   "repository": {
     "type": "git",
@@ -18,7 +30,23 @@
   "homepage": "https://github.com/rhysmorgan134/node-CarPlay#readme",
   "dependencies": {
     "node-microphone": "https://github.com/rhysmorgan134/node-microphone.git",
-    "socket.io": "^4.5.4",
     "usb": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/audioworklet": "^0.0.50",
+    "@types/jest": "^29.5.4",
+    "@types/node": "^18.11.9",
+    "@types/node-microphone": "^0.1.1",
+    "@types/w3c-web-usb": "^1.0.6",
+    "@types/webaudioapi": "^0.0.27",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@typescript-eslint/parser": "^6.4.0",
+    "eslint": "^8.47.0",
+    "eslint-config-prettier": "^9.0.0",
+    "jest": "^29.6.2",
+    "prettier": "^3.0.1",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
   }
 }
