@@ -6,6 +6,7 @@ import CarplayWeb, {
   WebMicrophone,
   AudioFormat,
   SendAudio,
+  decodeTypeMap,
 } from 'node-carplay/dist/web'
 import PCMPlayer from 'pcm-player'
 
@@ -42,13 +43,13 @@ const useCarplayAudio = (carplay: CarplayWeb) => {
 
   const processAudio = useCallback(
     (audio: AudioData) => {
-      if (audio.data && audio.format) {
+      if (audio.data) {
         const {
-          format,
+          decodeType,
           data: { buffer: audioData },
         } = audio
 
-        const player = getAudioPlayer(format)
+        const player = getAudioPlayer(decodeTypeMap[decodeType])
         player.feed(audioData)
       } else if (audio.command) {
         switch (audio.command) {
@@ -61,12 +62,12 @@ const useCarplayAudio = (carplay: CarplayWeb) => {
             mic?.stop()
             break
           case AudioCommand.AudioNaviStart:
-            const navPlayer = getAudioPlayer(audio.format)
+            const navPlayer = getAudioPlayer(decodeTypeMap[audio.decodeType])
             navPlayer.volume(defaultNavVolume)
             break
           case AudioCommand.AudioMediaStart:
           case AudioCommand.AudioOutputStart:
-            const mediaPlayer = getAudioPlayer(audio.format)
+            const mediaPlayer = getAudioPlayer(decodeTypeMap[audio.decodeType])
             mediaPlayer.volume(defaultAudioVolume)
             break
         }

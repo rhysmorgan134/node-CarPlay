@@ -26,7 +26,7 @@ export class WebMicrophone extends EventEmitter {
   }
 
   async start() {
-    if (!this.recorder) return
+    if (!this.recorder || this.active) return
     console.debug('starting mic')
     this.active = true
     this.inputStream
@@ -35,7 +35,7 @@ export class WebMicrophone extends EventEmitter {
   }
 
   stop() {
-    if (!this.recorder) return
+    if (!this.recorder || !this.active) return
     console.debug('stopping mic')
     this.active = false
     this.inputStream.disconnect()

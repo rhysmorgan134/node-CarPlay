@@ -8,8 +8,9 @@
     "skipLibCheck": true,
     "strict": true,
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "typeRoots": ["types", "node_modules/@types"]
   },
-  "exclude": ["node_modules", "src/web/*"],
+  "exclude": ["src/web/*"],
   "include": ["src/**/*"]
 }

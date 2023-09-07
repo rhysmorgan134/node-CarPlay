@@ -322,10 +322,9 @@ export const decodeTypeMap: DecodeTypeMapping = {
     bitrate: 16,
   },
 }
-
 export class AudioData extends Message {
   command?: AudioCommand
-  format: AudioFormat
+  decodeType: number
   volume: number
   volumeDuration?: number
   audioType: number
@@ -333,8 +332,7 @@ export class AudioData extends Message {
 
   constructor(header: MessageHeader, data: Buffer) {
     super(header)
-    const decodeType = data.readUInt32LE(0)
-    this.format = decodeTypeMap[decodeType]
+    this.decodeType = data.readUInt32LE(0)
     this.volume = data.readFloatLE(4)
     this.audioType = data.readUInt32LE(8)
     const amount = data.length - 12
