@@ -3,7 +3,6 @@ import NodeMicrophone from './NodeMicrophone'
 import EventEmitter from 'events'
 import {
   AudioData,
-  Key,
   MediaData,
   Message,
   Plugged,
@@ -15,6 +14,7 @@ import {
   DongleDriver,
   DongleConfig,
   DEFAULT_CONFIG,
+  Key,
 } from '../modules'
 
 const USB_WAIT_PERIOD_MS = 500
@@ -23,8 +23,8 @@ const USB_WAIT_RESTART_MS = 3000
 export default class CarplayNode extends EventEmitter {
   private _pairTimeout: NodeJS.Timeout | null = null
   private _plugged = false
-  private _dongleDriver: DongleDriver
   private _config: DongleConfig
+  public dongleDriver: DongleDriver
 
   constructor(config: DongleConfig = DEFAULT_CONFIG) {
     super()
@@ -53,7 +53,7 @@ export default class CarplayNode extends EventEmitter {
         this.emit('media', message)
       }
     })
-    this._dongleDriver = driver
+    this.dongleDriver = driver
   }
 
   private async findDevice() {
@@ -81,10 +81,6 @@ export default class CarplayNode extends EventEmitter {
     this.emitPlugged()
   }
 
-  sendTouch = ({ type, x, y }: { type: number; x: number; y: number }) => {
-    this._dongleDriver.send(new SendTouch(x, y, type))
-  }
-
   start = async () => {
     // Find device to "reset" first
     let device = await this.findDevice()
@@ -106,7 +102,7 @@ export default class CarplayNode extends EventEmitter {
 
     let initialised = false
     try {
-      const { initialise, open, send } = this._dongleDriver
+      const { initialise, open, send } = this.dongleDriver
       await initialise(device)
       await open(this._config)
       this._pairTimeout = setTimeout(() => {
@@ -131,6 +127,9 @@ export default class CarplayNode extends EventEmitter {
   }
 
   sendKey = (action: Key) => {
-    this._dongleDriver.send(new SendCarPlay(action))
+    this.dongleDriver.send(new SendCarPlay(action))
+  }
+  sendTouch = ({ type, x, y }: { type: number; x: number; y: number }) => {
+    this.dongleDriver.send(new SendTouch(x, y, type))
   }
 }
