@@ -5,8 +5,8 @@
     Node Carplay npm package
 </p>
 
-    
-<a href="https://www.buymeacoffee.com/rhysm" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>   
+
+<a href="https://www.buymeacoffee.com/rhysm" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 
 <!-- TABLE OF CONTENTS -->
@@ -46,7 +46,7 @@
 
 This is a carplay module for nodejs. It is currently in development, but is at a useable stage. Currently it interacts with a Carlinkit adapter, it opens communication with it, sends various
 configuration settings and also downloads the APK file thats usually used with it. The APK file then gets extracted and its contents get sent over usb to the
-dongle itself. The dongle then sends a h264 bytestream from the phone, this contains the video data. And it also sends an audio stream. 
+dongle itself. The dongle then sends a h264 bytestream from the phone, this contains the video data. And it also sends an audio stream.
 
 ### Built With
 
@@ -65,7 +65,7 @@ This project would not of been possible without electric monks work on a python 
 
 ### Prerequisites
 
-The target machine should have FFMPEG/FFPLAY installed and working 
+The target machine should have FFMPEG/FFPLAY installed and working
 
 ### Installation
 
@@ -73,7 +73,11 @@ The target machine should have FFMPEG/FFPLAY installed and working
 npm install node-carplay
 ```
 
+If you are on macOS, you need `sox` for `node-microphone` (for the `node` environment)
 
+```shell
+brew install sox
+```
 
 <!-- USAGE EXAMPLES -->
 ## Usage
