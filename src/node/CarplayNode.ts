@@ -17,6 +17,9 @@ import {
   DEFAULT_CONFIG,
 } from '../modules'
 
+const USB_WAIT_PERIOD_MS = 500
+const USB_WAIT_RESTART_MS = 3000
+
 export default class CarplayWS extends EventEmitter {
   private _pairTimeout: NodeJS.Timeout | null = null
   private _plugged = false
@@ -53,6 +56,27 @@ export default class CarplayWS extends EventEmitter {
     this._dongleDriver = driver
   }
 
+  private async findDevice() {
+    let device: USBDevice | null = null
+
+    while (device == null) {
+      try {
+        device = await webusb.requestDevice({
+          filters: DongleDriver.knownDevices,
+        })
+      } catch (err) {
+        // ^ requestDevice throws an error when no device is found, so keep retrying
+      }
+
+      if (device == null) {
+        console.log('No device found, retrying')
+        await new Promise(resolve => setTimeout(resolve, USB_WAIT_PERIOD_MS))
+      }
+    }
+
+    return device
+  }
+
   getStatus = () => {
     this.emitPlugged()
   }
@@ -62,14 +86,24 @@ export default class CarplayWS extends EventEmitter {
   }
 
   start = async () => {
-    const { knownDevices } = DongleDriver
+    // Find device to "reset" first
+    let device = await this.findDevice()
+    await device.open()
+    await device.reset()
+    await device.close()
+    // Resetting the device causes an unplug event in node-usb
+    // so subsequent writes fail with LIBUSB_ERROR_NO_DEVICE
+    // or LIBUSB_TRANSFER_ERROR
 
-    const device = await webusb.requestDevice({ filters: knownDevices })
-    if (!device) {
-      console.log('No device found, retrying in 2s')
-      setTimeout(this.start, 2000)
-      return
-    }
+    console.log('Reset device, finding again...')
+    await new Promise(resolve => setTimeout(resolve, USB_WAIT_RESTART_MS))
+    // ^ Device disappears after reset for 1-3 seconds
+
+    device = await this.findDevice()
+    console.log('found & opening')
+
+    await device.open()
+
     let initialised = false
     try {
       const { initialise, open, send } = this._dongleDriver
