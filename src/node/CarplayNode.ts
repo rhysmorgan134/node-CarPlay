@@ -20,7 +20,7 @@ import {
 const USB_WAIT_PERIOD_MS = 500
 const USB_WAIT_RESTART_MS = 3000
 
-export default class CarplayWS extends EventEmitter {
+export default class CarplayNode extends EventEmitter {
   private _pairTimeout: NodeJS.Timeout | null = null
   private _plugged = false
   private _dongleDriver: DongleDriver
