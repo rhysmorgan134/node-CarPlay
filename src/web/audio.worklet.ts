@@ -85,7 +85,7 @@ class PCMWorkletProcessor extends AudioWorkletProcessor {
   }
 
   process(_: Float32Array[][], outputs: Float32Array[][]) {
-    const output = outputs[0]
+    const outputChannels = outputs[0]
 
     const { available } = this.reader.getReadInfo()
     if (available < this.readerOutput.length) {
@@ -97,11 +97,13 @@ class PCMWorkletProcessor extends AudioWorkletProcessor {
     }
 
     this.reader.readTo(this.readerOutput)
-    this.readerOutput.forEach((value, i) => {
-      const channelIndex = i % this.channels
-      const dataIndex = Math.floor(i / this.channels)
-      output[channelIndex][dataIndex] = value / 32768
-    })
+
+    // play interleaved audio as it comes from the dongle by splitting it across the channels
+    for (let i = 0; i < this.readerOutput.length; i++) {
+      for (let channel = 0; channel < this.channels; channel++) {
+        outputChannels[channel][i] = this.readerOutput[2 * i + channel] / 32768
+      }
+    }
 
     this.underflowing = false
     return true
