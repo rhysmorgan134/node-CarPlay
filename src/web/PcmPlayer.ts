@@ -17,7 +17,7 @@ export class PcmPlayer {
 
   constructor(sampleRate: number, channels: number) {
     this.context = new AudioContext({
-      latencyHint: 'interactive',
+      latencyHint: 'playback',
       sampleRate,
     })
     this.gainNode = this.context.createGain()

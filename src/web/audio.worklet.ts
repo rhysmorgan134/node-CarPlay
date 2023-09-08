@@ -101,7 +101,9 @@ class PCMWorkletProcessor extends AudioWorkletProcessor {
     // play interleaved audio as it comes from the dongle by splitting it across the channels
     for (let i = 0; i < this.readerOutput.length; i++) {
       for (let channel = 0; channel < this.channels; channel++) {
-        outputChannels[channel][i] = this.readerOutput[2 * i + channel] / 32768
+        const pcm16Value = this.readerOutput[2 * i + channel]
+        const float32Value = pcm16Value / 32768
+        outputChannels[channel][i] = float32Value
       }
     }
 
