@@ -64,11 +64,10 @@ export class DongleDriver extends EventEmitter {
 
     try {
       this._device = device
-      console.debug('opening')
 
       console.debug('initializing')
       if (!device.opened) {
-        throw new Error('Illegal state - device not opened')
+        throw new DriverStateError('Illegal state - device not opened')
       }
       await this._device.selectConfiguration(CONFIG_NUMBER)
 
