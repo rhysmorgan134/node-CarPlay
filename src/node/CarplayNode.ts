@@ -1,6 +1,5 @@
 import { webusb } from 'usb'
 import NodeMicrophone from './NodeMicrophone'
-import EventEmitter from 'events'
 import {
   AudioData,
   MediaData,
@@ -15,19 +14,26 @@ import {
   DongleConfig,
   DEFAULT_CONFIG,
   Key,
+  CarPlay,
 } from '../modules'
 
 const USB_WAIT_PERIOD_MS = 500
 const USB_WAIT_RESTART_MS = 3000
 
-export default class CarplayNode extends EventEmitter {
+export type CarplayMessage =
+  | { type: 'plugged'; message?: undefined }
+  | { type: 'unplugged'; message?: undefined }
+  | { type: 'audio'; message: AudioData }
+  | { type: 'video'; message: VideoData }
+  | { type: 'media'; message: MediaData }
+  | { type: 'carplay'; message: CarPlay }
+
+export default class CarplayNode {
   private _pairTimeout: NodeJS.Timeout | null = null
-  private _plugged = false
   private _config: DongleConfig
   public dongleDriver: DongleDriver
 
   constructor(config: DongleConfig = DEFAULT_CONFIG) {
-    super()
     this._config = config
     const mic = new NodeMicrophone()
     const driver = new DongleDriver()
@@ -40,17 +46,17 @@ export default class CarplayNode extends EventEmitter {
           clearTimeout(this._pairTimeout)
           this._pairTimeout = null
         }
-        this._plugged = true
-        this.emitPlugged()
+        this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
-        this._plugged = false
-        this.emit('quit')
+        this.onmessage?.({ type: 'unplugged' })
       } else if (message instanceof VideoData) {
-        this.emit('carplay', message)
+        this.onmessage?.({ type: 'video', message })
       } else if (message instanceof AudioData) {
-        this.emit('audio', message)
+        this.onmessage?.({ type: 'audio', message })
       } else if (message instanceof MediaData) {
-        this.emit('media', message)
+        this.onmessage?.({ type: 'media', message })
+      } else if (message instanceof CarPlay) {
+        this.onmessage?.({ type: 'carplay', message })
       }
     })
     this.dongleDriver = driver
@@ -75,10 +81,6 @@ export default class CarplayNode extends EventEmitter {
     }
 
     return device
-  }
-
-  getStatus = () => {
-    this.emitPlugged()
   }
 
   start = async () => {
@@ -120,16 +122,12 @@ export default class CarplayNode extends EventEmitter {
     }
   }
 
-  private emitPlugged = () => {
-    this.emit('status', {
-      status: this._plugged,
-    })
-  }
-
   sendKey = (action: Key) => {
     this.dongleDriver.send(new SendCarPlay(action))
   }
   sendTouch = ({ type, x, y }: { type: number; x: number; y: number }) => {
     this.dongleDriver.send(new SendTouch(x, y, type))
   }
+
+  public onmessage: ((ev: CarplayMessage) => void) | null = null
 }
