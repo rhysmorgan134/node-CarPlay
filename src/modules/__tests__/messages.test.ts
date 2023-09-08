@@ -20,7 +20,6 @@ import {
   Unplugged,
   VideoData,
   WifiDeviceName,
-  decodeTypeMap,
 } from '../messages'
 
 describe('MessageHeader', () => {
