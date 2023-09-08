@@ -9,6 +9,8 @@ export enum KeyMapping {
   left = 100, //'Button Left',
   right = 101, //'Button Right',
   frame = 12,
+  audioToCar = 22, // Phone will Stream audio directly to car system and not dongle
+  audioToDongle = 23, // Phone will stream audio to the dongle and it will send it over the link - DEFAULT
   selectDown = 104, //'Button Select Down',
   selectUp = 105, //'Button Select Up',
   back = 106, //'Button Back',
