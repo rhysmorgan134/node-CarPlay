@@ -15,6 +15,7 @@ import {
   DEFAULT_CONFIG,
   Key,
   CarPlay,
+  AudioCommand,
 } from '../modules'
 
 const USB_WAIT_PERIOD_MS = 500
@@ -57,6 +58,20 @@ export default class CarplayNode {
         this.onmessage?.({ type: 'media', message })
       } else if (message instanceof CarPlay) {
         this.onmessage?.({ type: 'carplay', message })
+      }
+
+      // Trigger internal event logic
+      if (message instanceof AudioData && message.command != null) {
+        switch (message.command) {
+          case AudioCommand.AudioSiriStart:
+          case AudioCommand.AudioPhonecallStart:
+            mic.start()
+            break
+          case AudioCommand.AudioSiriStop:
+          case AudioCommand.AudioPhonecallStop:
+            mic.stop()
+            break
+        }
       }
     })
     this.dongleDriver = driver
