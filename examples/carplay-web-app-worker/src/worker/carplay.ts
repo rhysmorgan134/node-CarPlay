@@ -16,7 +16,7 @@ const handleMessage = (message: CarplayMessage) => {
   if (message instanceof VideoData) {
     postMessage(message, '/', [message.data])
   } else if (message instanceof AudioData && message.data) {
-    postMessage(message, '/', [message.data])
+    postMessage(message, '/', [message.data.buffer])
   } else {
     postMessage(message)
   }

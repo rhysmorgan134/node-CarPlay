@@ -20,7 +20,6 @@ import {
   Unplugged,
   VideoData,
   WifiDeviceName,
-  decodeTypeMap,
 } from '../messages'
 
 describe('MessageHeader', () => {
@@ -226,7 +225,7 @@ describe('Readable Messages', () => {
       const header = new MessageHeader(data.length, MessageType.AudioData)
       const message = header.toMessage(data)
       expect(message instanceof AudioData).toBeTruthy()
-      expect((message as AudioData).format).toBe(decodeTypeMap[1])
+      expect((message as AudioData).decodeType).toBe(1)
       expect((message as AudioData).volume).toBe(0.5)
       expect((message as AudioData).audioType).toBe(1)
       expect((message as AudioData).data).toStrictEqual(data.subarray(12))
@@ -241,7 +240,7 @@ describe('Readable Messages', () => {
       const header = new MessageHeader(data.length, MessageType.AudioData)
       const message = header.toMessage(data)
       expect(message instanceof AudioData).toBeTruthy()
-      expect((message as AudioData).format).toBe(decodeTypeMap[1])
+      expect((message as AudioData).decodeType).toBe(1)
       expect((message as AudioData).volume).toBe(0.5)
       expect((message as AudioData).audioType).toBe(1)
       expect((message as AudioData).volumeDuration).toBe(5)
@@ -257,7 +256,7 @@ describe('Readable Messages', () => {
       const header = new MessageHeader(data.length, MessageType.AudioData)
       const message = header.toMessage(data)
       expect(message instanceof AudioData).toBeTruthy()
-      expect((message as AudioData).format).toBe(decodeTypeMap[1])
+      expect((message as AudioData).decodeType).toBe(1)
       expect((message as AudioData).volume).toBe(0.5)
       expect((message as AudioData).audioType).toBe(1)
       expect((message as AudioData).command).toBe(AudioCommand.AudioOutputStart)

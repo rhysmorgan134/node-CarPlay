@@ -5,13 +5,10 @@ import {
   AudioData,
   WebMicrophone,
   AudioFormat,
+  decodeTypeMap,
 } from 'node-carplay/dist/web'
-import PCMPlayer from 'pcm-player'
+import { PcmPlayer } from 'pcm-ringbuf-player'
 import { CarPlayWorker } from './worker/types'
-
-const emptyFunc = () => {
-  return {}
-}
 
 //TODO: allow to configure
 const defaultAudioVolume = 1
@@ -19,24 +16,16 @@ const defaultNavVolume = 0.5
 
 const useCarplayAudio = (worker: CarPlayWorker) => {
   const [mic, setMic] = useState<WebMicrophone | null>(null)
-  const [audioPlayers] = useState(new Map<string, PCMPlayer>())
+  const [audioPlayers] = useState(new Map<AudioFormat, PcmPlayer>())
 
   const getAudioPlayer = useCallback(
-    (format: AudioFormat): PCMPlayer => {
-      // need to use key as objects here wont have the same reference as in direct approach
-      const key = `${format.frequency}_${format.bitrate}_${format.channel}`
-      let player = audioPlayers.get(key)
+    (format: AudioFormat): PcmPlayer => {
+      let player = audioPlayers.get(format)
       if (player) return player
-      player = new PCMPlayer({
-        channels: format.channel,
-        sampleRate: format.frequency,
-        inputCodec: 'Int16',
-        flushTime: 50,
-        onstatechange: emptyFunc,
-        onended: emptyFunc,
-      })
-      audioPlayers.set(key, player)
+      player = new PcmPlayer(format.frequency, format.channel)
+      audioPlayers.set(format, player)
       player.volume(defaultAudioVolume)
+      player.start()
       return player
     },
     [audioPlayers],
@@ -44,9 +33,9 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
 
   const processAudio = useCallback(
     (audio: AudioData) => {
-      if (audio.data && audio.format) {
-        const { format, data } = audio
-
+      if (audio.data) {
+        const { decodeType, data } = audio
+        const format = decodeTypeMap[decodeType]
         const player = getAudioPlayer(format)
         player.feed(data)
       } else if (audio.command) {
@@ -60,12 +49,12 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
             mic?.stop()
             break
           case AudioCommand.AudioNaviStart:
-            const navPlayer = getAudioPlayer(audio.format)
+            const navPlayer = getAudioPlayer(decodeTypeMap[audio.decodeType])
             navPlayer.volume(defaultNavVolume)
             break
           case AudioCommand.AudioMediaStart:
           case AudioCommand.AudioOutputStart:
-            const mediaPlayer = getAudioPlayer(audio.format)
+            const mediaPlayer = getAudioPlayer(decodeTypeMap[audio.decodeType])
             mediaPlayer.volume(defaultAudioVolume)
             break
         }
@@ -101,7 +90,7 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
     initMic()
 
     return () => {
-      audioPlayers.forEach(p => p.destroy())
+      audioPlayers.forEach(p => p.stop())
     }
   }, [audioPlayers, worker])
 
