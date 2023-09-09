@@ -329,7 +329,7 @@ export class AudioData extends Message {
   volume: number
   volumeDuration?: number
   audioType: number
-  data?: Buffer
+  data?: Int16Array
 
   constructor(header: MessageHeader, data: Buffer) {
     super(header)
@@ -343,7 +343,7 @@ export class AudioData extends Message {
     } else if (amount === 4) {
       this.volumeDuration = data.readUInt32LE(12)
     } else {
-      this.data = data.subarray(12)
+      this.data = new Int16Array(data.buffer, 12)
     }
   }
 }

@@ -45,13 +45,10 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
   const processAudio = useCallback(
     (audio: AudioData) => {
       if (audio.data && audio.format) {
-        const {
-          format,
-          data: { buffer: audioData },
-        } = audio
+        const { format, data } = audio
 
         const player = getAudioPlayer(format)
-        player.feed(audioData)
+        player.feed(data)
       } else if (audio.command) {
         switch (audio.command) {
           case AudioCommand.AudioSiriStart:
