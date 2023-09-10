@@ -25,6 +25,7 @@ export type DongleConfig = {
   boxName: string
   hand: number
   mediaDelay: number
+  audioTransferMode: boolean
 }
 
 export const DEFAULT_CONFIG: DongleConfig = {
@@ -36,6 +37,7 @@ export const DEFAULT_CONFIG: DongleConfig = {
   nightMode: false,
   hand: 0,
   mediaDelay: 300,
+  audioTransferMode: false,
 }
 
 export class DriverStateError extends Error {}
@@ -185,6 +187,7 @@ export class DongleDriver extends EventEmitter {
       nightMode: _nightMode,
       boxName: _boxName,
       mediaDelay,
+      audioTransferMode,
     } = config
     const initMessages = [
       new SendNumber(_dpi, FileAddress.DPI),
@@ -195,6 +198,7 @@ export class DongleDriver extends EventEmitter {
       new SendString(_boxName, FileAddress.BOX_NAME),
       new SendBoxSettings(mediaDelay),
       new SendCarPlay('wifiEn'),
+      new SendCarPlay(audioTransferMode ? 'phoneAudio' : 'dongleAudio'),
     ]
     await Promise.all(initMessages.map(this.send))
     setTimeout(() => {
