@@ -276,8 +276,8 @@ export class Unplugged extends Message {
 }
 
 export type AudioFormat = {
-  frequency: number
-  channel: number
+  frequency: 48000 | 44100 | 24000 | 16000 | 8000
+  channel: 1 | 2
   bitrate: number
 }
 
@@ -325,16 +325,15 @@ export const decodeTypeMap: DecodeTypeMapping = {
 
 export class AudioData extends Message {
   command?: AudioCommand
-  format: AudioFormat
+  decodeType: number
   volume: number
   volumeDuration?: number
   audioType: number
-  data?: Buffer
+  data?: Int16Array
 
   constructor(header: MessageHeader, data: Buffer) {
     super(header)
-    const decodeType = data.readUInt32LE(0)
-    this.format = decodeTypeMap[decodeType]
+    this.decodeType = data.readUInt32LE(0)
     this.volume = data.readFloatLE(4)
     this.audioType = data.readUInt32LE(8)
     const amount = data.length - 12
@@ -343,7 +342,7 @@ export class AudioData extends Message {
     } else if (amount === 4) {
       this.volumeDuration = data.readUInt32LE(12)
     } else {
-      this.data = data.subarray(12)
+      this.data = new Int16Array(data.buffer, 12)
     }
   }
 }
