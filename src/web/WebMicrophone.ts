@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-export class WebMicrophone extends EventEmitter {
+export default class WebMicrophone extends EventEmitter {
   private active = false
   private sampleRate = 16000
   private audioContext: AudioContext

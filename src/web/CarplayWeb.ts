@@ -13,8 +13,8 @@ import { DongleDriver, DongleConfig } from '../modules'
 const { knownDevices } = DongleDriver
 
 export type CarplayMessage =
-  | { type: 'plugged' }
-  | { type: 'unplugged' }
+  | { type: 'plugged'; message?: undefined }
+  | { type: 'unplugged'; message?: undefined }
   | { type: 'audio'; message: AudioData }
   | { type: 'video'; message: VideoData }
   | { type: 'media'; message: MediaData }
@@ -89,6 +89,11 @@ export default class CarplayWeb {
   start = async (usbDevice: USBDevice) => {
     if (this._started) return
     const { initialise, open, send } = this.dongleDriver
+
+    console.debug('opening device')
+    await usbDevice.open()
+    await usbDevice.reset()
+
     await initialise(usbDevice)
     await open(this._config)
     this._pairTimeout = setTimeout(() => {

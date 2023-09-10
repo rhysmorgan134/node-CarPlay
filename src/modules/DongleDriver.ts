@@ -55,6 +55,10 @@ export class DongleDriver extends EventEmitter {
     { vendorId: 0x1314, productId: 0x1521 },
   ]
 
+  // NB! Make sure to reset the device outside of this class
+  // Resetting device through node-usb can cause transfer issues
+  // and for it to "disappear"
+
   initialise = async (device: USBDevice) => {
     if (this._device) {
       return
@@ -62,10 +66,11 @@ export class DongleDriver extends EventEmitter {
 
     try {
       this._device = device
-      console.debug('opening')
 
-      await this._device.open()
-      await this._device.reset()
+      console.debug('initializing')
+      if (!device.opened) {
+        throw new DriverStateError('Illegal state - device not opened')
+      }
       await this._device.selectConfiguration(CONFIG_NUMBER)
 
       if (!this._device.configuration) {

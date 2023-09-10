@@ -1,9 +1,7 @@
 import { webusb } from 'usb'
 import NodeMicrophone from './NodeMicrophone'
-import EventEmitter from 'events'
 import {
   AudioData,
-  Key,
   MediaData,
   Message,
   Plugged,
@@ -15,16 +13,28 @@ import {
   DongleDriver,
   DongleConfig,
   DEFAULT_CONFIG,
+  Key,
+  CarPlay,
+  AudioCommand,
 } from '../modules'
 
-export default class CarplayWS extends EventEmitter {
+const USB_WAIT_PERIOD_MS = 500
+const USB_WAIT_RESTART_MS = 3000
+
+export type CarplayMessage =
+  | { type: 'plugged'; message?: undefined }
+  | { type: 'unplugged'; message?: undefined }
+  | { type: 'audio'; message: AudioData }
+  | { type: 'video'; message: VideoData }
+  | { type: 'media'; message: MediaData }
+  | { type: 'carplay'; message: CarPlay }
+
+export default class CarplayNode {
   private _pairTimeout: NodeJS.Timeout | null = null
-  private _plugged = false
-  private _dongleDriver: DongleDriver
   private _config: DongleConfig
+  public dongleDriver: DongleDriver
 
   constructor(config: DongleConfig = DEFAULT_CONFIG) {
-    super()
     this._config = config
     const mic = new NodeMicrophone()
     const driver = new DongleDriver()
@@ -37,42 +47,79 @@ export default class CarplayWS extends EventEmitter {
           clearTimeout(this._pairTimeout)
           this._pairTimeout = null
         }
-        this._plugged = true
-        this.emitPlugged()
+        this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
-        this._plugged = false
-        this.emit('quit')
+        this.onmessage?.({ type: 'unplugged' })
       } else if (message instanceof VideoData) {
-        this.emit('carplay', message)
+        this.onmessage?.({ type: 'video', message })
       } else if (message instanceof AudioData) {
-        this.emit('audio', message)
+        this.onmessage?.({ type: 'audio', message })
       } else if (message instanceof MediaData) {
-        this.emit('media', message)
+        this.onmessage?.({ type: 'media', message })
+      } else if (message instanceof CarPlay) {
+        this.onmessage?.({ type: 'carplay', message })
+      }
+
+      // Trigger internal event logic
+      if (message instanceof AudioData && message.command != null) {
+        switch (message.command) {
+          case AudioCommand.AudioSiriStart:
+          case AudioCommand.AudioPhonecallStart:
+            mic.start()
+            break
+          case AudioCommand.AudioSiriStop:
+          case AudioCommand.AudioPhonecallStop:
+            mic.stop()
+            break
+        }
       }
     })
-    this._dongleDriver = driver
+    this.dongleDriver = driver
   }
 
-  getStatus = () => {
-    this.emitPlugged()
-  }
+  private async findDevice() {
+    let device: USBDevice | null = null
 
-  sendTouch = ({ type, x, y }: { type: number; x: number; y: number }) => {
-    this._dongleDriver.send(new SendTouch(x, y, type))
+    while (device == null) {
+      try {
+        device = await webusb.requestDevice({
+          filters: DongleDriver.knownDevices,
+        })
+      } catch (err) {
+        // ^ requestDevice throws an error when no device is found, so keep retrying
+      }
+
+      if (device == null) {
+        console.log('No device found, retrying')
+        await new Promise(resolve => setTimeout(resolve, USB_WAIT_PERIOD_MS))
+      }
+    }
+
+    return device
   }
 
   start = async () => {
-    const { knownDevices } = DongleDriver
+    // Find device to "reset" first
+    let device = await this.findDevice()
+    await device.open()
+    await device.reset()
+    await device.close()
+    // Resetting the device causes an unplug event in node-usb
+    // so subsequent writes fail with LIBUSB_ERROR_NO_DEVICE
+    // or LIBUSB_TRANSFER_ERROR
 
-    const device = await webusb.requestDevice({ filters: knownDevices })
-    if (!device) {
-      console.log('No device found, retrying in 2s')
-      setTimeout(this.start, 2000)
-      return
-    }
+    console.log('Reset device, finding again...')
+    await new Promise(resolve => setTimeout(resolve, USB_WAIT_RESTART_MS))
+    // ^ Device disappears after reset for 1-3 seconds
+
+    device = await this.findDevice()
+    console.log('found & opening')
+
+    await device.open()
+
     let initialised = false
     try {
-      const { initialise, open, send } = this._dongleDriver
+      const { initialise, open, send } = this.dongleDriver
       await initialise(device)
       await open(this._config)
       this._pairTimeout = setTimeout(() => {
@@ -90,13 +137,12 @@ export default class CarplayWS extends EventEmitter {
     }
   }
 
-  private emitPlugged = () => {
-    this.emit('status', {
-      status: this._plugged,
-    })
+  sendKey = (action: Key) => {
+    this.dongleDriver.send(new SendCarPlay(action))
+  }
+  sendTouch = ({ type, x, y }: { type: number; x: number; y: number }) => {
+    this.dongleDriver.send(new SendTouch(x, y, type))
   }
 
-  sendKey = (action: Key) => {
-    this._dongleDriver.send(new SendCarPlay(action))
-  }
+  public onmessage: ((ev: CarplayMessage) => void) | null = null
 }
