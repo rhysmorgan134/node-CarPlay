@@ -11,9 +11,9 @@
     "config:icon": "ts-node ./scripts/configIcon.ts",
     "test": "jest --silent",
     "coverage": "jest --silent --coverage",
-    "build:node": "tsc --build",
-    "build:web": "tsc --build ./src/web/tsconfig.json",
-    "clean": "tsc --build --clean",
+    "build": "tsc --build ./tsconfig.build.json ./src/web/tsconfig.json",
+    "watch": "tsc --build ./tsconfig.build.json ./src/web/tsconfig.json --watch",
+    "clean": "tsc --build --clean ./ ./src/web/tsconfig.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --ext .js,.ts,.tsx .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|tsx|json)\""

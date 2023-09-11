@@ -1,10 +1,10 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "ES6",
-    "module": "ES2020",
+    "module": "ESNext",
     "moduleResolution": "NodeNext",
-    "lib": ["es2020", "DOM", "WebWorker"],
+    "lib": ["es2023", "DOM", "WebWorker"],
   },
-  "exclude": ["../node/*"]
+  "include": ["*"],
+  "exclude": []
 }

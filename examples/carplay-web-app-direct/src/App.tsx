@@ -20,7 +20,7 @@ export const config: DongleConfig = {
   height: window.innerHeight,
   fps: 60,
   mediaDelay: 0,
-  audioTransferMode: false
+  audioTransferMode: false,
 }
 
 function App() {
