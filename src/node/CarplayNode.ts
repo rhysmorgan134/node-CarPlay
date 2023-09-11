@@ -119,9 +119,9 @@ export default class CarplayNode {
 
     let initialised = false
     try {
-      const { initialise, open, send } = this.dongleDriver
+      const { initialise, start, send } = this.dongleDriver
       await initialise(device)
-      await open(this._config)
+      await start(this._config)
       this._pairTimeout = setTimeout(() => {
         console.debug('no device, sending pair')
         send(new SendCarPlay('wifiPair'))

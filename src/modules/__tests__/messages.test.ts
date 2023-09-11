@@ -228,7 +228,9 @@ describe('Readable Messages', () => {
       expect((message as AudioData).decodeType).toBe(1)
       expect((message as AudioData).volume).toBe(0.5)
       expect((message as AudioData).audioType).toBe(1)
-      expect((message as AudioData).data).toStrictEqual(data.subarray(12))
+      expect((message as AudioData).data).toStrictEqual(
+        new Int16Array(data.buffer, 12),
+      )
     })
 
     it('constructs message with volume duration', () => {

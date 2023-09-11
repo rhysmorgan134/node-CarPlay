@@ -88,14 +88,14 @@ export default class CarplayWeb {
 
   start = async (usbDevice: USBDevice) => {
     if (this._started) return
-    const { initialise, open, send } = this.dongleDriver
+    const { initialise, start, send } = this.dongleDriver
 
     console.debug('opening device')
     await usbDevice.open()
     await usbDevice.reset()
 
     await initialise(usbDevice)
-    await open(this._config)
+    await start(this._config)
     this._pairTimeout = setTimeout(() => {
       console.debug('no device, sending pair')
       send(new SendCarPlay('wifiPair'))

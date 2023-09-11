@@ -34,22 +34,22 @@ describe('DongleDriver', () => {
   })
 
   describe('Initialise method', () => {
-    it('returns if device is already open', async () => {
+    it('fails if device is not open', async () => {
       const driver = new DongleDriver()
 
-      const device = usbDeviceFactory({ opened: true })
-      await driver.initialise(device)
+      const device = usbDeviceFactory()
 
-      const device2 = usbDeviceFactory({ opened: true })
-      await driver.initialise(device2)
-
-      expect(device.open).toHaveBeenCalledTimes(1)
-      expect(device2.open).toHaveBeenCalledTimes(0)
+      await expect(driver.initialise(device)).rejects.toThrow(
+        new DriverStateError('Illegal state - device not opened'),
+      )
     })
 
     it('fails if device has no config', async () => {
       const driver = new DongleDriver()
-      const device = usbDeviceFactory({ configuration: undefined })
+      const device = usbDeviceFactory({
+        opened: true,
+        configuration: undefined,
+      })
       await expect(driver.initialise(device)).rejects.toThrow(
         new DriverStateError('Illegal state - device has no configuration'),
       )
@@ -58,6 +58,7 @@ describe('DongleDriver', () => {
     it('fails if device config has no IN endpoint', async () => {
       const driver = new DongleDriver()
       const device = usbDeviceFactory({
+        opened: true,
         configuration: {
           ...deviceConfig,
           interfaces: [
@@ -84,6 +85,7 @@ describe('DongleDriver', () => {
     it('fails if device config has no out endpoint', async () => {
       const driver = new DongleDriver()
       const device = usbDeviceFactory({
+        opened: true,
         configuration: {
           ...deviceConfig,
           interfaces: [
@@ -109,30 +111,30 @@ describe('DongleDriver', () => {
 
     it('returns when device is initialised correctly', async () => {
       const driver = new DongleDriver()
-      const device = usbDeviceFactory()
+      const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
       expect(device.selectConfiguration).toHaveBeenCalledTimes(1)
       expect(device.claimInterface).toHaveBeenCalledTimes(1)
       expect(device.claimInterface).toHaveBeenCalledWith(
         device.configuration?.interfaces[0].interfaceNumber,
       )
-      expect(device.open).toHaveBeenCalledTimes(1)
     })
   })
 
-  describe('Open method', () => {
+  describe('Start method', () => {
     it('fails if driver is not initialised with device', async () => {
       const driver = new DongleDriver()
-      await expect(driver.open(DEFAULT_CONFIG)).rejects.toThrow(
+      await expect(driver.start(DEFAULT_CONFIG)).rejects.toThrow(
         new DriverStateError('No device set - call initialise first'),
       )
     })
 
     it('returns without sending data to device if device is not open', async () => {
       const driver = new DongleDriver()
-      const device = usbDeviceFactory({ opened: false })
+      const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
-      await driver.open(DEFAULT_CONFIG)
+      Object.defineProperty(device, 'opened', { value: false })
+      await driver.start(DEFAULT_CONFIG)
       expect(device.transferOut).toHaveBeenCalledTimes(0)
     })
 
@@ -140,7 +142,7 @@ describe('DongleDriver', () => {
       const driver = new DongleDriver()
       const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
-      await driver.open(DEFAULT_CONFIG)
+      await driver.start(DEFAULT_CONFIG)
 
       expectMessageSent(
         device,
@@ -175,7 +177,7 @@ describe('DongleDriver', () => {
       const driver = new DongleDriver()
       const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
-      await driver.open(DEFAULT_CONFIG)
+      await driver.start(DEFAULT_CONFIG)
       jest.runOnlyPendingTimers()
       // wifi connect
       expect(setTimeout).toHaveBeenCalledTimes(1)
@@ -196,8 +198,9 @@ describe('DongleDriver', () => {
 
     it('returns null if device is not open', async () => {
       const driver = new DongleDriver()
-      const device = usbDeviceFactory({ opened: false })
+      const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
+      Object.defineProperty(device, 'opened', { value: false })
       const res = await driver.send(new SendCarPlay('frame'))
       expect(res).toBeNull()
       expect(device.transferOut).toHaveBeenCalledTimes(0)
@@ -252,7 +255,7 @@ describe('DongleDriver', () => {
 
     it('closes device when set', async () => {
       const driver = new DongleDriver()
-      const device = usbDeviceFactory()
+      const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
       await driver.close()
       expect(device.close).toHaveBeenCalledTimes(1)

@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "target": "es2020",
-    "lib": ["es2020"],
-    "module": "commonjs",
+    "target": "es2022",
+    "lib": ["ES2023"],
+    "module": "node16",
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "strict": true,
-    "declaration": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node16",
     "sourceMap": true
   },
   "exclude": ["node_modules", "src/web/*"],

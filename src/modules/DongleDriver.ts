@@ -178,7 +178,7 @@ export class DongleDriver extends EventEmitter {
     }
   }
 
-  open = async (config: DongleConfig) => {
+  start = async (config: DongleConfig) => {
     if (!this._device) {
       throw new DriverStateError('No device set - call initialise first')
     }
