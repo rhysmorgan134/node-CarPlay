@@ -8,7 +8,7 @@ export type CarplayWorkerMessage = { data: CarplayMessage }
 
 export type Command =
   | { type: 'stop' }
-  | { type: 'start'; payload: DongleConfig }
+  | { type: 'start'; payload: Partial<DongleConfig> }
   | { type: 'touch'; payload: { x: number; y: number; action: TouchAction } }
   | { type: 'microphoneInput'; payload: Buffer }
 

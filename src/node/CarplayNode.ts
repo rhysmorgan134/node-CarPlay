@@ -34,8 +34,8 @@ export default class CarplayNode {
   private _config: DongleConfig
   public dongleDriver: DongleDriver
 
-  constructor(config: DongleConfig = DEFAULT_CONFIG) {
-    this._config = config
+  constructor(config: Partial<DongleConfig>) {
+    this._config = Object.assign({}, DEFAULT_CONFIG, config)
     const mic = new NodeMicrophone()
     const driver = new DongleDriver()
     mic.on('data', data => {
@@ -43,18 +43,18 @@ export default class CarplayNode {
     })
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
-        if (this._pairTimeout) {
-          clearTimeout(this._pairTimeout)
-          this._pairTimeout = null
-        }
+        this.clearPairTimeout()
         this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
         this.onmessage?.({ type: 'unplugged' })
       } else if (message instanceof VideoData) {
+        this.clearPairTimeout()
         this.onmessage?.({ type: 'video', message })
       } else if (message instanceof AudioData) {
+        this.clearPairTimeout()
         this.onmessage?.({ type: 'audio', message })
       } else if (message instanceof MediaData) {
+        this.clearPairTimeout()
         this.onmessage?.({ type: 'media', message })
       } else if (message instanceof CarPlay) {
         this.onmessage?.({ type: 'carplay', message })
@@ -134,6 +134,13 @@ export default class CarplayNode {
     if (!initialised) {
       console.log('carplay not initialised, retrying in 2s')
       setTimeout(this.start, 2000)
+    }
+  }
+
+  private clearPairTimeout() {
+    if (this._pairTimeout) {
+      clearTimeout(this._pairTimeout)
+      this._pairTimeout = null
     }
   }
 

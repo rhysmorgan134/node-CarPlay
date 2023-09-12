@@ -11,16 +11,14 @@ import JMuxer from 'jmuxer'
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
 
-export const config: DongleConfig = {
-  dpi: 160,
-  nightMode: false,
-  hand: 0,
-  boxName: 'nodePlay',
-  width: window.innerWidth,
-  height: window.innerHeight,
+const width = window.innerWidth
+const height = window.innerHeight
+
+const config: Partial<DongleConfig> = {
+  width,
+  height,
   fps: 60,
   mediaDelay: 0,
-  audioTransferMode: false,
 }
 
 function App() {
@@ -143,10 +141,10 @@ function App() {
         return
       }
 
-      const { offsetX, offsetY } = e.nativeEvent
+      const { offsetX: x, offsetY: y } = e.nativeEvent
       carplayWorker.postMessage({
         type: 'touch',
-        payload: { x: offsetX, y: offsetY, action },
+        payload: { x: x / width, y: y / height, action },
       })
     },
     [carplayWorker, pointerdown],
