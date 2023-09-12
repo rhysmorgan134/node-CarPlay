@@ -17,6 +17,7 @@ import {
   CarPlay,
   AudioCommand,
 } from '../modules'
+import { NodeSpeaker } from '.'
 
 const USB_WAIT_PERIOD_MS = 500
 const USB_WAIT_RESTART_MS = 3000
@@ -29,15 +30,22 @@ export type CarplayMessage =
   | { type: 'media'; message: MediaData }
   | { type: 'carplay'; message: CarPlay }
 
+export type CarplayNodeConfig = DongleConfig & {
+  playAudio?: boolean
+}
+
 export default class CarplayNode {
   private _pairTimeout: NodeJS.Timeout | null = null
-  private _config: DongleConfig
+  private _config: CarplayNodeConfig
   public dongleDriver: DongleDriver
 
-  constructor(config: DongleConfig = DEFAULT_CONFIG) {
+  constructor(config: CarplayNodeConfig = DEFAULT_CONFIG) {
     this._config = config
+
     const mic = new NodeMicrophone()
     const driver = new DongleDriver()
+    const speaker = new NodeSpeaker()
+
     mic.on('data', data => {
       driver.send(new SendAudio(data))
     })
@@ -72,6 +80,14 @@ export default class CarplayNode {
             mic.stop()
             break
         }
+      }
+
+      if (
+        message instanceof AudioData &&
+        message.data != null &&
+        config.playAudio
+      ) {
+        speaker.feed(message)
       }
     })
     this.dongleDriver = driver
