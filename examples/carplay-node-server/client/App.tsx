@@ -21,7 +21,7 @@ function App() {
       node: 'video',
       mode: 'video',
       fps: config.fps,
-      flushingTime: 100,
+      flushingTime: 0,
       debug: false,
     })
 
