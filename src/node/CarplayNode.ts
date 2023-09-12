@@ -43,10 +43,6 @@ export default class CarplayNode {
     })
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
-        if (this._pairTimeout) {
-          clearTimeout(this._pairTimeout)
-          this._pairTimeout = null
-        }
         this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
         this.onmessage?.({ type: 'unplugged' })
@@ -71,6 +67,18 @@ export default class CarplayNode {
           case AudioCommand.AudioPhonecallStop:
             mic.stop()
             break
+        }
+      }
+
+      if (
+        message instanceof Plugged ||
+        message instanceof AudioData ||
+        message instanceof VideoData ||
+        message instanceof MediaData
+      ) {
+        if (this._pairTimeout) {
+          clearTimeout(this._pairTimeout)
+          this._pairTimeout = null
         }
       }
     })
@@ -123,6 +131,8 @@ export default class CarplayNode {
       await initialise(device)
       await start(this._config)
       this._pairTimeout = setTimeout(() => {
+        this._pairTimeout = null
+
         console.debug('no device, sending pair')
         send(new SendCarPlay('wifiPair'))
       }, 15000)

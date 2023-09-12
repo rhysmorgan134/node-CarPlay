@@ -64,10 +64,6 @@ export default class CarplayWeb {
     const driver = new DongleDriver()
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
-        if (this._pairTimeout) {
-          clearTimeout(this._pairTimeout)
-          this._pairTimeout = null
-        }
         this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
         this.onmessage?.({ type: 'unplugged' })
@@ -79,6 +75,19 @@ export default class CarplayWeb {
         this.onmessage?.({ type: 'media', message })
       } else if (message instanceof CarPlay) {
         this.onmessage?.({ type: 'carplay', message })
+      }
+
+      // Trigger internal event logic
+      if (
+        message instanceof Plugged ||
+        message instanceof AudioData ||
+        message instanceof VideoData ||
+        message instanceof MediaData
+      ) {
+        if (this._pairTimeout) {
+          clearTimeout(this._pairTimeout)
+          this._pairTimeout = null
+        }
       }
     })
     this.dongleDriver = driver
@@ -97,6 +106,8 @@ export default class CarplayWeb {
     await initialise(usbDevice)
     await start(this._config)
     this._pairTimeout = setTimeout(() => {
+      this._pairTimeout = null
+
       console.debug('no device, sending pair')
       send(new SendCarPlay('wifiPair'))
     }, 15000)
