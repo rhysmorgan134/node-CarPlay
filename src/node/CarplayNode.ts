@@ -71,15 +71,14 @@ export default class CarplayNode {
       }
 
       if (
-        message instanceof Plugged ||
-        message instanceof AudioData ||
-        message instanceof VideoData ||
-        message instanceof MediaData
+        (message instanceof Plugged ||
+          message instanceof AudioData ||
+          message instanceof VideoData ||
+          message instanceof MediaData) &&
+        this._pairTimeout != null
       ) {
-        if (this._pairTimeout) {
-          clearTimeout(this._pairTimeout)
-          this._pairTimeout = null
-        }
+        clearTimeout(this._pairTimeout)
+        this._pairTimeout = null
       }
     })
     this.dongleDriver = driver
