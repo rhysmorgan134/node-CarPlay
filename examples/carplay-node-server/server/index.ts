@@ -4,7 +4,7 @@ import express from 'express'
 import WebSocket, { WebSocketServer } from 'ws'
 
 import CarPlayNode, {
-  DongleConfig,
+  CarplayNodeConfig,
   SendTouch,
   decodeTypeMap,
 } from 'node-carplay/dist/node'
@@ -13,13 +13,14 @@ import path from 'path'
 const PORT = parseInt(process.env.PORT ?? '', 10) || 3000
 const PATH_STATIC = path.join(__dirname, '..', 'public')
 
-const config: DongleConfig = {
+const config: CarplayNodeConfig = {
   dpi: 160,
   nightMode: false,
   hand: 0,
   boxName: 'nodePlay',
   mediaDelay: 0,
   audioTransferMode: false,
+  playAudio: true,
 
   fps: 0,
   width: 0,
