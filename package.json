@@ -7,6 +7,7 @@
     "./dist/web": "./dist/web/index.js"
   },
   "scripts": {
+    "prepare": "npm run build",
     "start:node": "ts-node ./scripts/startNode.ts",
     "config:icon": "ts-node ./scripts/configIcon.ts",
     "test": "jest --silent",
