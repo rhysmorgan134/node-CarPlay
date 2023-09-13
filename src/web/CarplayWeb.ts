@@ -8,7 +8,7 @@ import {
   SendCarPlay,
   CarPlay,
 } from '../modules/messages'
-import { DongleDriver, DongleConfig } from '../modules'
+import { DongleDriver, DongleConfig, DEFAULT_CONFIG } from '../modules'
 
 const { knownDevices } = DongleDriver
 
@@ -59,29 +59,36 @@ export default class CarplayWeb {
   private _config: DongleConfig
   public dongleDriver: DongleDriver
 
-  constructor(config: DongleConfig) {
-    this._config = config
+  constructor(config: Partial<DongleConfig>) {
+    this._config = Object.assign({}, DEFAULT_CONFIG, config)
     const driver = new DongleDriver()
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
-        if (this._pairTimeout) {
-          clearTimeout(this._pairTimeout)
-          this._pairTimeout = null
-        }
+        this.clearPairTimeout()
         this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
         this.onmessage?.({ type: 'unplugged' })
       } else if (message instanceof VideoData) {
+        this.clearPairTimeout()
         this.onmessage?.({ type: 'video', message })
       } else if (message instanceof AudioData) {
+        this.clearPairTimeout()
         this.onmessage?.({ type: 'audio', message })
       } else if (message instanceof MediaData) {
+        this.clearPairTimeout()
         this.onmessage?.({ type: 'media', message })
       } else if (message instanceof CarPlay) {
         this.onmessage?.({ type: 'carplay', message })
       }
     })
     this.dongleDriver = driver
+  }
+
+  private clearPairTimeout() {
+    if (this._pairTimeout) {
+      clearTimeout(this._pairTimeout)
+      this._pairTimeout = null
+    }
   }
 
   public onmessage: ((ev: CarplayMessage) => void) | null = null

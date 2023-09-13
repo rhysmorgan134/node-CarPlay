@@ -11,16 +11,14 @@ import CarplayWeb, {
 import JMuxer from 'jmuxer'
 import useCarplayAudio from './useCarplayAudio'
 
-export const config: DongleConfig = {
-  dpi: 160,
-  nightMode: false,
-  hand: 0,
-  boxName: 'nodePlay',
-  width: window.innerWidth,
-  height: window.innerHeight,
+const width = window.innerWidth
+const height = window.innerHeight
+
+const config: Partial<DongleConfig> = {
+  width,
+  height,
   fps: 60,
   mediaDelay: 0,
-  audioTransferMode: false,
 }
 
 function App() {
@@ -139,7 +137,7 @@ function App() {
 
       const { offsetX: x, offsetY: y } = e.nativeEvent
       carplay.dongleDriver.send(
-        new SendTouch(x / config.width, y / config.height, action),
+        new SendTouch(x / width, y / height, action),
       )
     },
     [carplay, pointerdown],

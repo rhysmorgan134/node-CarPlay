@@ -10,7 +10,7 @@ import CarplayWeb, {
 import { Command } from './types'
 
 let carplayWeb: CarplayWeb | null = null
-let config: DongleConfig | null = null
+let config: Partial<DongleConfig> | null = null
 
 const handleMessage = (message: CarplayMessage) => {
   if (message instanceof VideoData) {
@@ -37,7 +37,7 @@ onmessage = async (event: MessageEvent<Command>) => {
     case 'touch':
       if (config && carplayWeb) {
         const { x, y, action } = event.data.payload
-        const data = new SendTouch(x / config.width, y / config.height, action)
+        const data = new SendTouch(x, y, action)
         carplayWeb.dongleDriver.send(data)
       }
       break
