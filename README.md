@@ -2,9 +2,8 @@
 <h3 align="center">Node Carplay</h3>
 
   <p align="center">
-    Node Carplay npm package
+    Carplay dongle driver for Node/Browser
 </p>
-
 
 <a href="https://www.buymeacoffee.com/rhysm" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
@@ -31,7 +30,6 @@
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
   </ol>
 </details>
 
@@ -42,7 +40,7 @@
 
 ![node carplay Screen Shot](https://i.imgur.com/egkvgau.png)
 
-[example video](https://youtu.be/mBeYd7RNw1w)
+[Example Video](https://youtu.be/mBeYd7RNw1w)
 
 This is a carplay module for nodejs. It is currently in development, but is at a useable stage. Currently it interacts with a Carlinkit adapter, it opens communication with it, sends various
 configuration settings and also downloads the APK file thats usually used with it. The APK file then gets extracted and its contents get sent over usb to the
@@ -57,15 +55,10 @@ This project would not of been possible without electric monks work on a python 
 * [JSmpeg-player](https://github.com/cycjimmy/jsmpeg-player)
 
 
-
-<!-- GETTING STARTED -->
 ## Getting Started
 
 
-
 ### Prerequisites
-
-The target machine should have FFMPEG/FFPLAY installed and working
 
 ### Installation
 
@@ -78,15 +71,11 @@ If you are on macOS, you need `sox` for `node-microphone` (for the `node` enviro
 ```shell
 brew install sox
 ```
-
-<!-- USAGE EXAMPLES -->
 ## Usage
 
 TODO see [react-carplay](https://github.com/rhysmorgan134/react-carplay)
 
 
-
-<!-- ROADMAP -->
 ## Roadmap
 
 * - [ ] Enabled hardware accelleration
@@ -95,7 +84,6 @@ TODO see [react-carplay](https://github.com/rhysmorgan134/react-carplay)
 * - [x] Integrate microphone
 
 
-<!-- CONTRIBUTING -->
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
@@ -107,11 +95,13 @@ Contributions are what make the open source community such an amazing place to b
 5. Open a Pull Request
 
 
+## License
+
+The contents of this repository are licensed under the terms of the MIT License.
+See the `LICENSE` file for more info.
 
 
-
-<!-- CONTACT -->
 ## Contact
 
-Your Name - Rhys Morgan - rhysm134@gmail.com
+Rhys Morgan - rhysm134@gmail.com
 
