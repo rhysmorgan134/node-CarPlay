@@ -20,6 +20,7 @@ const config: Partial<DongleConfig> = {
   fps: 60,
   mediaDelay: 0,
 }
+const RETRY_DELAY_MS = 5000
 
 function App() {
   const [isPlugged, setPlugged] = useState(false)
@@ -65,6 +66,14 @@ function App() {
           break
         case 'media':
           //TODO: implement
+          break
+        case 'failure':
+          console.error(
+            `Carplay initialization failed -- Reloading page in ${RETRY_DELAY_MS}ms`,
+          )
+          setTimeout(() => {
+            window.location.reload()
+          }, RETRY_DELAY_MS)
           break
       }
     }
