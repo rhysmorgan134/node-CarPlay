@@ -24,6 +24,7 @@ const USB_WAIT_RESTART_MS = 3000
 export type CarplayMessage =
   | { type: 'plugged'; message?: undefined }
   | { type: 'unplugged'; message?: undefined }
+  | { type: 'failure'; message?: undefined }
   | { type: 'audio'; message: AudioData }
   | { type: 'video'; message: VideoData }
   | { type: 'media'; message: MediaData }
@@ -73,6 +74,9 @@ export default class CarplayNode {
             break
         }
       }
+    })
+    driver.on('failure', () => {
+      this.onmessage?.({ type: 'failure' })
     })
     this.dongleDriver = driver
   }
