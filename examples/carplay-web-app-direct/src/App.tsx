@@ -20,6 +20,7 @@ const config: Partial<DongleConfig> = {
   fps: 60,
   mediaDelay: 0,
 }
+const RETRY_DELAY_MS = 5000
 
 function App() {
   const [isPlugged, setPlugged] = useState(false)
@@ -42,6 +43,14 @@ function App() {
           break
         case 'unplugged':
           setPlugged(false)
+          break
+        case 'failure':
+          console.error(
+            `Carplay initialization failed -- Reloading page in ${RETRY_DELAY_MS}ms`,
+          )
+          setTimeout(() => {
+            window.location.reload()
+          }, RETRY_DELAY_MS)
           break
         case 'video':
           // if document is hidden we dont need to feed frames
@@ -136,9 +145,7 @@ function App() {
       }
 
       const { offsetX: x, offsetY: y } = e.nativeEvent
-      carplay.dongleDriver.send(
-        new SendTouch(x / width, y / height, action),
-      )
+      carplay.dongleDriver.send(new SendTouch(x / width, y / height, action))
     },
     [carplay, pointerdown],
   )
