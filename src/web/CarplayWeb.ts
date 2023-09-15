@@ -20,7 +20,6 @@ export type CarplayMessage =
   | { type: 'video'; message: VideoData }
   | { type: 'media'; message: MediaData }
   | { type: 'carplay'; message: CarPlay }
-  | { type: 'failure'; message?: undefined }
 
 export const isCarplayDongle = (device: USBDevice) => {
   const known = knownDevices.some(
