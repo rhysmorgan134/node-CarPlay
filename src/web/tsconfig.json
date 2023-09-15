@@ -1,8 +1,6 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "NodeNext",
     "lib": ["es2023", "DOM", "WebWorker"],
   },
   "include": ["*"],
