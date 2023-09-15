@@ -15,6 +15,7 @@ const { knownDevices } = DongleDriver
 export type CarplayMessage =
   | { type: 'plugged'; message?: undefined }
   | { type: 'unplugged'; message?: undefined }
+  | { type: 'failure'; message?: undefined }
   | { type: 'audio'; message: AudioData }
   | { type: 'video'; message: VideoData }
   | { type: 'media'; message: MediaData }
