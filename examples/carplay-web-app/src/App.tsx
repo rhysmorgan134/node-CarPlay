@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RotatingLines } from 'react-loader-spinner'
 import './App.css'
-import CarplayWeb, {
+import {
   TouchAction,
   findDevice,
   requestDevice,
   DongleConfig,
-  SendTouch,
 } from 'node-carplay/dist/web'
 import JMuxer from 'jmuxer'
+import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
 
 const width = window.innerWidth
@@ -20,6 +20,7 @@ const config: Partial<DongleConfig> = {
   fps: 60,
   mediaDelay: 0,
 }
+const RETRY_DELAY_MS = 5000
 
 function App() {
   const [isPlugged, setPlugged] = useState(false)
@@ -28,14 +29,20 @@ function App() {
   const [receivingVideo, setReceivingVideo] = useState(false)
   const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
 
-  const carplay = useMemo(() => new CarplayWeb(config), [])
+  const carplayWorker = useMemo(
+    () =>
+      new Worker(
+        new URL('./worker/carplay.ts', import.meta.url),
+      ) as CarPlayWorker,
+    [],
+  )
 
-  const { processAudio } = useCarplayAudio(carplay)
+  const { processAudio } = useCarplayAudio(carplayWorker)
 
   // subscribe to worker messages
   useEffect(() => {
-    carplay.onmessage = ev => {
-      const { type } = ev
+    carplayWorker.onmessage = ev => {
+      const { type } = ev.data
       switch (type) {
         case 'plugged':
           setPlugged(true)
@@ -47,22 +54,30 @@ function App() {
           // if document is hidden we dont need to feed frames
           if (!jmuxer || document.hidden) return
           if (!receivingVideo) setReceivingVideo(true)
-          const { message: video } = ev
+          const { message: video } = ev.data
           jmuxer.feed({
             video: video.data,
             duration: 0,
           })
           break
         case 'audio':
-          const { message: audio } = ev
+          const { message: audio } = ev.data
           processAudio(audio)
           break
         case 'media':
           //TODO: implement
           break
+        case 'failure':
+          console.error(
+            `Carplay initialization failed -- Reloading page in ${RETRY_DELAY_MS}ms`,
+          )
+          setTimeout(() => {
+            window.location.reload()
+          }, RETRY_DELAY_MS)
+          break
       }
     }
-  }, [carplay, jmuxer, processAudio, receivingVideo])
+  }, [carplayWorker, jmuxer, processAudio, receivingVideo])
 
   // video init
   useEffect(() => {
@@ -84,12 +99,12 @@ function App() {
       const device = request ? await requestDevice() : await findDevice()
       if (device) {
         setNoDevice(false)
-        carplay.start(device)
+        carplayWorker.postMessage({ type: 'start', payload: config })
       } else {
         setNoDevice(true)
       }
     },
-    [carplay],
+    [carplayWorker],
   )
 
   // usb connect/disconnect handling and device check
@@ -101,13 +116,13 @@ function App() {
     navigator.usb.ondisconnect = async () => {
       const device = await findDevice()
       if (!device) {
-        carplay.stop()
+        carplayWorker.postMessage({ type: 'stop' })
         setNoDevice(true)
       }
     }
 
     checkDevice()
-  }, [carplay, checkDevice])
+  }, [carplayWorker, checkDevice])
 
   const onClick = useCallback(() => {
     checkDevice(true)
@@ -136,11 +151,12 @@ function App() {
       }
 
       const { offsetX: x, offsetY: y } = e.nativeEvent
-      carplay.dongleDriver.send(
-        new SendTouch(x / width, y / height, action),
-      )
+      carplayWorker.postMessage({
+        type: 'touch',
+        payload: { x: x / width, y: y / height, action },
+      })
     },
-    [carplay, pointerdown],
+    [carplayWorker, pointerdown],
   )
 
   const isLoading = !noDevice && !receivingVideo

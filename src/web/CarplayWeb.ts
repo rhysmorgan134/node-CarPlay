@@ -15,6 +15,7 @@ const { knownDevices } = DongleDriver
 export type CarplayMessage =
   | { type: 'plugged'; message?: undefined }
   | { type: 'unplugged'; message?: undefined }
+  | { type: 'failure'; message?: undefined }
   | { type: 'audio'; message: AudioData }
   | { type: 'video'; message: VideoData }
   | { type: 'media'; message: MediaData }
@@ -80,6 +81,9 @@ export default class CarplayWeb {
       } else if (message instanceof CarPlay) {
         this.onmessage?.({ type: 'carplay', message })
       }
+    })
+    driver.on('failure', () => {
+      this.onmessage?.({ type: 'failure' })
     })
     this.dongleDriver = driver
   }
