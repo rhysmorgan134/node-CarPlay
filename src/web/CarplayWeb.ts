@@ -5,8 +5,8 @@ import {
   VideoData,
   AudioData,
   MediaData,
-  SendCarPlay,
-  CarPlay,
+  SendCommand,
+  Command,
 } from '../modules/messages'
 import { DongleDriver, DongleConfig, DEFAULT_CONFIG } from '../modules'
 
@@ -19,7 +19,7 @@ export type CarplayMessage =
   | { type: 'audio'; message: AudioData }
   | { type: 'video'; message: VideoData }
   | { type: 'media'; message: MediaData }
-  | { type: 'carplay'; message: CarPlay }
+  | { type: 'command'; message: Command }
 
 export const isCarplayDongle = (device: USBDevice) => {
   const known = knownDevices.some(
@@ -78,8 +78,8 @@ export default class CarplayWeb {
       } else if (message instanceof MediaData) {
         this.clearPairTimeout()
         this.onmessage?.({ type: 'media', message })
-      } else if (message instanceof CarPlay) {
-        this.onmessage?.({ type: 'carplay', message })
+      } else if (message instanceof Command) {
+        this.onmessage?.({ type: 'command', message })
       }
     })
     driver.on('failure', () => {
@@ -109,7 +109,7 @@ export default class CarplayWeb {
     await start(this._config)
     this._pairTimeout = setTimeout(() => {
       console.debug('no device, sending pair')
-      send(new SendCarPlay('wifiPair'))
+      send(new SendCommand('wifiPair'))
     }, 15000)
     this._started = true
   }

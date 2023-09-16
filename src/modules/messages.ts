@@ -32,7 +32,7 @@ export enum MessageType {
   Open = 0x01,
   HeartBeat = 0xaa,
   ManufacturerInfo = 0x14,
-  CarPlay = 0x08,
+  Command = 0x08,
   LogoType = 0x09,
   SoftwareVersion = 0xcc,
   BluetoothAddress = 0x0a,
@@ -112,8 +112,8 @@ export class MessageHeader {
           return new ManufacturerInfo(this, data)
         case MessageType.SoftwareVersion:
           return new SoftwareVersion(this, data)
-        case MessageType.CarPlay:
-          return new CarPlay(this, data)
+        case MessageType.Command:
+          return new Command(this, data)
         case MessageType.Plugged:
           return new Plugged(this, data)
         case MessageType.WifiDeviceName:
@@ -165,7 +165,7 @@ export abstract class Message {
   }
 }
 
-export class CarPlay extends Message {
+export class Command extends Message {
   value: KeyMapping
 
   constructor(header: MessageHeader, data: Buffer) {
@@ -427,8 +427,8 @@ export abstract class SendableMessage {
   }
 }
 
-export class SendCarPlay extends SendableMessage {
-  type = MessageType.CarPlay
+export class SendCommand extends SendableMessage {
+  type = MessageType.Command
   value: KeyMapping
 
   getData(): Buffer {

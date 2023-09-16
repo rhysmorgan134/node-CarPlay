@@ -6,7 +6,7 @@ import {
   Message,
   Plugged,
   SendAudio,
-  SendCarPlay,
+  SendCommand,
   SendTouch,
   Unplugged,
   VideoData,
@@ -14,7 +14,7 @@ import {
   DongleConfig,
   DEFAULT_CONFIG,
   Key,
-  CarPlay,
+  Command,
   AudioCommand,
 } from '../modules'
 
@@ -28,7 +28,7 @@ export type CarplayMessage =
   | { type: 'audio'; message: AudioData }
   | { type: 'video'; message: VideoData }
   | { type: 'media'; message: MediaData }
-  | { type: 'carplay'; message: CarPlay }
+  | { type: 'command'; message: Command }
 
 export default class CarplayNode {
   private _pairTimeout: NodeJS.Timeout | null = null
@@ -57,8 +57,8 @@ export default class CarplayNode {
       } else if (message instanceof MediaData) {
         this.clearPairTimeout()
         this.onmessage?.({ type: 'media', message })
-      } else if (message instanceof CarPlay) {
-        this.onmessage?.({ type: 'carplay', message })
+      } else if (message instanceof Command) {
+        this.onmessage?.({ type: 'command', message })
       }
 
       // Trigger internal event logic
@@ -128,7 +128,7 @@ export default class CarplayNode {
       await start(this._config)
       this._pairTimeout = setTimeout(() => {
         console.debug('no device, sending pair')
-        send(new SendCarPlay('wifiPair'))
+        send(new SendCommand('wifiPair'))
       }, 15000)
       initialised = true
     } catch (err) {
@@ -149,7 +149,7 @@ export default class CarplayNode {
   }
 
   sendKey = (action: Key) => {
-    this.dongleDriver.send(new SendCarPlay(action))
+    this.dongleDriver.send(new SendCommand(action))
   }
   sendTouch = ({ type, x, y }: { type: number; x: number; y: number }) => {
     this.dongleDriver.send(new SendTouch(x, y, type))
