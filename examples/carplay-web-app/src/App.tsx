@@ -6,7 +6,7 @@ import {
   findDevice,
   requestDevice,
   DongleConfig,
-} from 'node-carplay/dist/web'
+} from 'node-carplay/web'
 import JMuxer from 'jmuxer'
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'

@@ -1,5 +1,5 @@
 import { webusb } from 'usb'
-import NodeMicrophone from './NodeMicrophone'
+import NodeMicrophone from './NodeMicrophone.js'
 import {
   AudioData,
   MediaData,
@@ -16,7 +16,7 @@ import {
   Key,
   CarPlay,
   AudioCommand,
-} from '../modules'
+} from '../modules/index.js'
 
 const USB_WAIT_PERIOD_MS = 500
 const USB_WAIT_RESTART_MS = 3000

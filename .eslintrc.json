@@ -4,13 +4,15 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "import"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "prettier"
   ],
-  "rules": {},
+  "rules": {
+    "import/extensions": ["error", "ignorePackages"]
+  },
   "env": {
     "browser": true,
     "es2021": true
