@@ -1,6 +1,7 @@
 import { DongleDriver, DEFAULT_CONFIG, DriverStateError } from '../DongleDriver'
 import {
   FileAddress,
+  HeartBeat,
   SendBoolean,
   SendBoxSettings,
   SendCommand,
@@ -15,10 +16,6 @@ import {
   usbInterface,
   usbEndpoint,
 } from './mocks/usbMocks'
-
-jest.useFakeTimers()
-jest.spyOn(global, 'setTimeout')
-jest.spyOn(global, 'setInterval')
 
 const expectMessageSent = (device: USBDevice, message: SendableMessage) => {
   expect(device.transferOut).toHaveBeenCalledWith(
@@ -138,6 +135,10 @@ describe('DongleDriver', () => {
     })
 
     it('returns and sends open commands to device when device is open', async () => {
+      jest.useFakeTimers()
+      jest.spyOn(global, 'setTimeout')
+      jest.spyOn(global, 'setInterval')
+
       const driver = new DongleDriver()
       const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
@@ -164,9 +165,20 @@ describe('DongleDriver', () => {
       expectMessageSent(device, new SendBoxSettings(DEFAULT_CONFIG.mediaDelay))
       expectMessageSent(device, new SendCommand('wifiEn'))
       expectMessageSent(device, new SendCommand('dongleAudio'))
+
+      jest.runOnlyPendingTimers()
+
+      // delayed wifi connect and interval messages
+      expectMessageSent(device, new SendCommand('wifiConnect'))
+      expectMessageSent(device, new HeartBeat())
+      expectMessageSent(device, new SendCommand('frame'))
     })
 
     it('sets up correct timeouts and intervals when device is open', async () => {
+      jest.useFakeTimers()
+      jest.spyOn(global, 'setTimeout')
+      jest.spyOn(global, 'setInterval')
+
       const driver = new DongleDriver()
       const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
