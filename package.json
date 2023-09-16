@@ -2,9 +2,10 @@
   "name": "node-carplay",
   "version": "4.0.0",
   "description": "",
+  "type": "module",
   "exports": {
-    "./dist/node": "./dist/node/index.js",
-    "./dist/web": "./dist/web/index.js"
+    "./node": "./dist/node/index.js",
+    "./web": "./dist/web/index.js"
   },
   "scripts": {
     "prepare": "npm run build",
