@@ -7,8 +7,8 @@ import {
   MediaData,
   SendCarPlay,
   CarPlay,
-} from '../modules/messages'
-import { DongleDriver, DongleConfig, DEFAULT_CONFIG } from '../modules'
+} from '../modules/messages.js'
+import { DongleDriver, DongleConfig, DEFAULT_CONFIG } from '../modules/index.js'
 
 const { knownDevices } = DongleDriver
 
