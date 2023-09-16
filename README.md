@@ -44,7 +44,7 @@ This repository contains the npm package `node-carplay` that can be used on the 
 
 There are multiple Carplay dongles on the market, the ones that convert wired to wireless carplay WILL NOT WORK. You need one that converts android/factory infotainment systems into Carplay (CPC200-Autokit or CPC200-CCPA etc). The package forwards video feed in h264, and PCM audio coming in from the USB dongle.
 
-There's an included example `carplay-web-app-worker` that runs in the browser and renders the Carplay environment. It supports mic input and audio output through Chrome audio stack as well as touch / mouse input.
+There's an included example `carplay-web-app` that runs in the browser and renders the Carplay environment. It supports mic input and audio output through Chrome audio stack as well as touch / mouse input.
 
 ### Acknowledgements
 
