@@ -24,8 +24,8 @@
     "type": "git",
     "url": "git+https://github.com/rhysmorgan134/node-CarPlay.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "rhysmorgan134",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/rhysmorgan134/node-CarPlay/issues"
   },
