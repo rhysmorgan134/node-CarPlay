@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RotatingLines } from 'react-loader-spinner'
 import './App.css'
-import {
-  TouchAction,
-  findDevice,
-  requestDevice,
-  DongleConfig,
-} from 'node-carplay/dist/web'
+import { findDevice, requestDevice, DongleConfig } from 'node-carplay/dist/web'
 import JMuxer from 'jmuxer'
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
+import { useCarplayTouch } from './useCarplayTouch'
 
 const width = window.innerWidth
 const height = window.innerHeight
@@ -25,7 +21,6 @@ const RETRY_DELAY_MS = 5000
 function App() {
   const [isPlugged, setPlugged] = useState(false)
   const [noDevice, setNoDevice] = useState(false)
-  const [pointerdown, setPointerDown] = useState(false)
   const [receivingVideo, setReceivingVideo] = useState(false)
   const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
 
@@ -128,36 +123,7 @@ function App() {
     checkDevice(true)
   }, [checkDevice])
 
-  const sendTouchEvent: React.PointerEventHandler<HTMLDivElement> = useCallback(
-    e => {
-      let action = TouchAction.Up
-      if (e.type === 'pointerdown') {
-        action = TouchAction.Down
-        setPointerDown(true)
-      } else if (pointerdown) {
-        switch (e.type) {
-          case 'pointermove':
-            action = TouchAction.Move
-            break
-          case 'pointerup':
-          case 'pointercancel':
-          case 'pointerout':
-            setPointerDown(false)
-            action = TouchAction.Up
-            break
-        }
-      } else {
-        return
-      }
-
-      const { offsetX: x, offsetY: y } = e.nativeEvent
-      carplayWorker.postMessage({
-        type: 'touch',
-        payload: { x: x / width, y: y / height, action },
-      })
-    },
-    [carplayWorker, pointerdown],
-  )
+  const sendTouchEvent = useCarplayTouch(carplayWorker, width, height)
 
   const isLoading = !noDevice && !receivingVideo
 
