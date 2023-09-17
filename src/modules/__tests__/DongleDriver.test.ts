@@ -1,4 +1,9 @@
-import { DongleDriver, DEFAULT_CONFIG, DriverStateError } from '../DongleDriver'
+import { jest } from '@jest/globals'
+import {
+  DongleDriver,
+  DEFAULT_CONFIG,
+  DriverStateError,
+} from '../DongleDriver.js'
 import {
   FileAddress,
   HeartBeat,
@@ -9,13 +14,13 @@ import {
   SendOpen,
   SendString,
   SendableMessage,
-} from '../messages'
+} from '../messages.js'
 import {
   usbDeviceFactory,
   deviceConfig,
   usbInterface,
   usbEndpoint,
-} from './mocks/usbMocks'
+} from './mocks/usbMocks.js'
 
 const expectMessageSent = (device: USBDevice, message: SendableMessage) => {
   expect(device.transferOut).toHaveBeenCalledWith(
@@ -213,11 +218,15 @@ describe('DongleDriver', () => {
 
     it('returns true and calls transferOut with correct data if device is set and initialised', async () => {
       const driver = new DongleDriver()
+
       const device = usbDeviceFactory({
         opened: true,
-        transferOut: jest.fn().mockResolvedValue({
-          status: 'ok',
-        }),
+        transferOut: jest
+          .fn<() => Promise<USBOutTransferResult>>()
+          .mockResolvedValue({
+            status: 'ok',
+            bytesWritten: 1,
+          }),
       })
 
       await driver.initialise(device)
@@ -235,9 +244,12 @@ describe('DongleDriver', () => {
       const driver = new DongleDriver()
       const device = usbDeviceFactory({
         opened: true,
-        transferOut: jest.fn().mockResolvedValue({
-          status: 'stall',
-        }),
+        transferOut: jest
+          .fn<() => Promise<USBOutTransferResult>>()
+          .mockResolvedValue({
+            status: 'stall',
+            bytesWritten: 0,
+          }),
       })
 
       await driver.initialise(device)

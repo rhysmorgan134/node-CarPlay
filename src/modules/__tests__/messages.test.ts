@@ -20,7 +20,7 @@ import {
   Unplugged,
   VideoData,
   WifiDeviceName,
-} from '../messages'
+} from '../messages.js'
 
 describe('MessageHeader', () => {
   describe('constructor', () => {

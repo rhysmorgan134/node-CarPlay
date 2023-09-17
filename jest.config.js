@@ -1,7 +1,9 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
-// eslint-disable-next-line no-undef
-module.exports = {
-  preset: 'ts-jest',
+export default {
+  preset: 'ts-jest/presets/default-esm', // or other ESM presets
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
   testEnvironment: 'node',
   modulePathIgnorePatterns: ['<rootDir>/examples/', 'mocks', 'dist'],
 }

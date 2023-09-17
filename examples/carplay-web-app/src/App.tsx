@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RotatingLines } from 'react-loader-spinner'
 import './App.css'
-import {
-  findDevice,
-  requestDevice,
-  DongleConfig,
-} from 'node-carplay/web'
+import { findDevice, requestDevice, DongleConfig } from 'node-carplay/web'
 import JMuxer from 'jmuxer'
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
