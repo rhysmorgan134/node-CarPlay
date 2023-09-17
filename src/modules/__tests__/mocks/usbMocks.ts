@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals'
+
 export const usbEndpoint: Partial<USBEndpoint> = {
   endpointNumber: 1,
   type: 'bulk',
@@ -49,21 +51,23 @@ export const usbDeviceFactory = (
     deviceVersionSubminor: 0,
     configurations: [deviceConfig],
     configuration: deviceConfig,
-    open: jest.fn(),
-    close: jest.fn(),
-    forget: jest.fn(),
-    selectConfiguration: jest.fn(),
-    claimInterface: jest.fn(),
-    releaseInterface: jest.fn(),
-    selectAlternateInterface: jest.fn(),
-    controlTransferIn: jest.fn(),
-    controlTransferOut: jest.fn(),
-    clearHalt: jest.fn(),
-    transferIn: jest.fn(),
-    transferOut: jest.fn(),
-    isochronousTransferIn: jest.fn(),
-    isochronousTransferOut: jest.fn(),
-    reset: jest.fn(),
+    open: jest.fn<() => Promise<void>>(),
+    close: jest.fn<() => Promise<void>>(),
+    forget: jest.fn<() => Promise<void>>(),
+    selectConfiguration: jest.fn<() => Promise<void>>(),
+    claimInterface: jest.fn<() => Promise<void>>(),
+    releaseInterface: jest.fn<() => Promise<void>>(),
+    selectAlternateInterface: jest.fn<() => Promise<void>>(),
+    controlTransferIn: jest.fn<() => Promise<USBInTransferResult>>(),
+    controlTransferOut: jest.fn<() => Promise<USBOutTransferResult>>(),
+    clearHalt: jest.fn<() => Promise<void>>(),
+    transferIn: jest.fn<() => Promise<USBInTransferResult>>(),
+    transferOut: jest.fn<() => Promise<USBOutTransferResult>>(),
+    isochronousTransferIn:
+      jest.fn<() => Promise<USBIsochronousInTransferResult>>(),
+    isochronousTransferOut:
+      jest.fn<() => Promise<USBIsochronousOutTransferResult>>(),
+    reset: jest.fn<() => Promise<void>>(),
     ...devicePartial,
   }
 }
