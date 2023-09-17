@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { TouchAction } from 'node-carplay/dist/web'
+import { TouchAction } from 'node-carplay/web'
 import { CarPlayWorker } from './worker/types'
 
 export const useCarplayTouch = (

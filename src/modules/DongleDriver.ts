@@ -10,7 +10,7 @@ import {
   SendNumber,
   SendOpen,
   SendBoxSettings,
-} from './messages'
+} from './messages.js'
 import EventEmitter from 'events'
 
 const CONFIG_NUMBER = 1

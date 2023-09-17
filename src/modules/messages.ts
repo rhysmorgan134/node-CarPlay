@@ -1,5 +1,5 @@
-import { DongleConfig } from './DongleDriver'
-import { clamp } from './utils'
+import { DongleConfig } from './DongleDriver.js'
+import { clamp } from './utils.js'
 
 export enum KeyMapping {
   invalid = 0, //'invalid',

@@ -1,5 +1,5 @@
-import CarplayNode from './CarplayNode'
+import CarplayNode from './CarplayNode.js'
 
-export * from '../modules'
-export { default as NodeMicrophone } from './NodeMicrophone'
+export * from '../modules/index.js'
+export { default as NodeMicrophone } from './NodeMicrophone.js'
 export default CarplayNode

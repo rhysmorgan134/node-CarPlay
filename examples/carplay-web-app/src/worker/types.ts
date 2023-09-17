@@ -1,8 +1,4 @@
-import {
-  DongleConfig,
-  TouchAction,
-  CarplayMessage,
-} from 'node-carplay/dist/web'
+import { DongleConfig, TouchAction, CarplayMessage } from 'node-carplay/web'
 
 export type CarplayWorkerMessage = { data: CarplayMessage }
 

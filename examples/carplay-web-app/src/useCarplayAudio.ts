@@ -6,7 +6,7 @@ import {
   WebMicrophone,
   AudioFormat,
   decodeTypeMap,
-} from 'node-carplay/dist/web'
+} from 'node-carplay/web'
 import { PcmPlayer } from 'pcm-ringbuf-player'
 import { CarPlayWorker } from './worker/types'
 
