@@ -43,11 +43,11 @@ jobs:
         run: (cd examples/carplay-web-app && npm run build)
 
       - name: Zip up the built example
-        run: (cd examples/carplay-web-app/build && zip -r ../../../carplay-web-app.zip *)
+        run: (cd examples/carplay-web-app/build && tar -cvzf ../../../carplay-web-app.tar.gz *)
 
       - name: Upload built example
         uses: actions/upload-artifact@v3
         with:
-          name: carplay-web-app.zip
-          path: carplay-web-app.zip
+          name: carplay-web-app.tar.gz
+          path: carplay-web-app.tar.gz
           retention-days: 30
