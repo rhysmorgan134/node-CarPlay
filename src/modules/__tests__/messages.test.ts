@@ -5,7 +5,7 @@ import {
   BluetoothDeviceName,
   BluetoothPIN,
   BluetoothPairedList,
-  CarPlay,
+  Command,
   HeaderBuildError,
   HiCarLink,
   KeyMapping,
@@ -13,7 +13,7 @@ import {
   MessageHeader,
   MessageType,
   Plugged,
-  SendCarPlay,
+  SendCommand,
   SendTouch,
   SoftwareVersion,
   TouchAction,
@@ -25,8 +25,8 @@ import {
 describe('MessageHeader', () => {
   describe('constructor', () => {
     it('Constructs instance with type and length', () => {
-      const header = new MessageHeader(10, MessageType.CarPlay)
-      expect(header.type).toBe(MessageType.CarPlay)
+      const header = new MessageHeader(10, MessageType.Command)
+      expect(header.type).toBe(MessageType.Command)
       expect(header.length).toBe(10)
     })
   })
@@ -36,10 +36,10 @@ describe('MessageHeader', () => {
       const buffer = Buffer.alloc(16)
       buffer.writeUInt32LE(MessageHeader.magic, 0)
       buffer.writeUInt32LE(10, 4)
-      buffer.writeUInt32LE(MessageType.CarPlay, 8)
-      buffer.writeUInt32LE(((MessageType.CarPlay ^ -1) & 0xffffffff) >>> 0, 12)
+      buffer.writeUInt32LE(MessageType.Command, 8)
+      buffer.writeUInt32LE(((MessageType.Command ^ -1) & 0xffffffff) >>> 0, 12)
       const header = MessageHeader.fromBuffer(buffer)
-      expect(header.type).toBe(MessageType.CarPlay)
+      expect(header.type).toBe(MessageType.Command)
       expect(header.length).toBe(10)
     })
 
@@ -62,7 +62,7 @@ describe('MessageHeader', () => {
       const buffer = Buffer.alloc(16)
       buffer.writeUInt32LE(MessageHeader.magic, 0)
       buffer.writeUInt32LE(10, 4)
-      buffer.writeUInt32LE(MessageType.CarPlay, 8)
+      buffer.writeUInt32LE(MessageType.Command, 8)
       buffer.writeUInt32LE(12345, 12)
       expect(() => MessageHeader.fromBuffer(buffer)).toThrow(
         new HeaderBuildError('Invalid type check, received 12345'),
@@ -77,25 +77,25 @@ describe('MessageHeader', () => {
     })
 
     it('constructs message based on type with data', () => {
-      const header = new MessageHeader(4, MessageType.CarPlay)
+      const header = new MessageHeader(4, MessageType.Command)
       const data = Buffer.alloc(4)
       data.writeUInt32LE(KeyMapping.siri, 0)
       const message = header.toMessage(data)
-      expect(message instanceof CarPlay).toBeTruthy()
-      expect((message as CarPlay).value).toBe(KeyMapping.siri)
+      expect(message instanceof Command).toBeTruthy()
+      expect((message as Command).value).toBe(KeyMapping.siri)
     })
   })
 })
 
 describe('Readable Messages', () => {
-  describe('CarPlay Message', () => {
+  describe('Command Message', () => {
     it('constructs message with correct value', () => {
-      const header = new MessageHeader(4, MessageType.CarPlay)
+      const header = new MessageHeader(4, MessageType.Command)
       const data = Buffer.alloc(4)
       data.writeUInt32LE(KeyMapping.frame, 0)
       const message = header.toMessage(data)
-      expect(message instanceof CarPlay).toBeTruthy()
-      expect((message as CarPlay).value).toBe(KeyMapping.frame)
+      expect(message instanceof Command).toBeTruthy()
+      expect((message as Command).value).toBe(KeyMapping.frame)
     })
   })
 
@@ -320,9 +320,9 @@ describe('Sendable Messages', () => {
     })
   })
 
-  describe('CarPlay Message', () => {
+  describe('Command Message', () => {
     it('constructs message with correct values', () => {
-      const message = new SendCarPlay('siri')
+      const message = new SendCommand('siri')
       expect(message.value).toBe(KeyMapping.siri)
     })
 
@@ -330,7 +330,7 @@ describe('Sendable Messages', () => {
       const expectedData = Buffer.alloc(4)
       expectedData.writeUInt32LE(KeyMapping.siri, 0)
 
-      const message = new SendCarPlay('siri')
+      const message = new SendCommand('siri')
 
       const [, data] = message.serialise()
       expect(data).toStrictEqual(expectedData)

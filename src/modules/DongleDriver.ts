@@ -3,7 +3,7 @@ import {
   HeaderBuildError,
   SendableMessage,
   HeartBeat,
-  SendCarPlay,
+  SendCommand,
   SendString,
   FileAddress,
   SendBoolean,
@@ -202,12 +202,12 @@ export class DongleDriver extends EventEmitter {
       new SendBoolean(true, FileAddress.CHARGE_MODE),
       new SendString(_boxName, FileAddress.BOX_NAME),
       new SendBoxSettings(mediaDelay),
-      new SendCarPlay('wifiEn'),
-      new SendCarPlay(audioTransferMode ? 'phoneAudio' : 'dongleAudio'),
+      new SendCommand('wifiEn'),
+      new SendCommand(audioTransferMode ? 'phoneAudio' : 'dongleAudio'),
     ]
     await Promise.all(initMessages.map(this.send))
     setTimeout(() => {
-      this.send(new SendCarPlay('wifiConnect'))
+      this.send(new SendCommand('wifiConnect'))
     }, 1000)
 
     this.readLoop()
@@ -216,7 +216,7 @@ export class DongleDriver extends EventEmitter {
       this.send(new HeartBeat())
     }, 2000)
     this._frameInterval = setInterval(() => {
-      this.send(new SendCarPlay('frame'))
+      this.send(new SendCommand('frame'))
     }, 5000)
   }
 

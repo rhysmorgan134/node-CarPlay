@@ -4,7 +4,7 @@ import {
   HeartBeat,
   SendBoolean,
   SendBoxSettings,
-  SendCarPlay,
+  SendCommand,
   SendNumber,
   SendOpen,
   SendString,
@@ -16,10 +16,6 @@ import {
   usbInterface,
   usbEndpoint,
 } from './mocks/usbMocks'
-
-jest.useFakeTimers()
-jest.spyOn(global, 'setTimeout')
-jest.spyOn(global, 'setInterval')
 
 const expectMessageSent = (device: USBDevice, message: SendableMessage) => {
   expect(device.transferOut).toHaveBeenCalledWith(
@@ -139,6 +135,10 @@ describe('DongleDriver', () => {
     })
 
     it('returns and sends open commands to device when device is open', async () => {
+      jest.useFakeTimers()
+      jest.spyOn(global, 'setTimeout')
+      jest.spyOn(global, 'setInterval')
+
       const driver = new DongleDriver()
       const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
@@ -163,17 +163,22 @@ describe('DongleDriver', () => {
         new SendString(DEFAULT_CONFIG.boxName, FileAddress.BOX_NAME),
       )
       expectMessageSent(device, new SendBoxSettings(DEFAULT_CONFIG.mediaDelay))
-      expectMessageSent(device, new SendCarPlay('wifiEn'))
+      expectMessageSent(device, new SendCommand('wifiEn'))
+      expectMessageSent(device, new SendCommand('dongleAudio'))
 
       jest.runOnlyPendingTimers()
 
       // delayed wifi connect and interval messages
-      expectMessageSent(device, new SendCarPlay('wifiConnect'))
+      expectMessageSent(device, new SendCommand('wifiConnect'))
       expectMessageSent(device, new HeartBeat())
-      expectMessageSent(device, new SendCarPlay('frame'))
+      expectMessageSent(device, new SendCommand('frame'))
     })
 
     it('sets up correct timeouts and intervals when device is open', async () => {
+      jest.useFakeTimers()
+      jest.spyOn(global, 'setTimeout')
+      jest.spyOn(global, 'setInterval')
+
       const driver = new DongleDriver()
       const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
@@ -192,7 +197,7 @@ describe('DongleDriver', () => {
   describe('Send method', () => {
     it('returns null if there is no sevice', async () => {
       const driver = new DongleDriver()
-      const res = await driver.send(new SendCarPlay('frame'))
+      const res = await driver.send(new SendCommand('frame'))
       expect(res).toBeNull()
     })
 
@@ -201,7 +206,7 @@ describe('DongleDriver', () => {
       const device = usbDeviceFactory({ opened: true })
       await driver.initialise(device)
       Object.defineProperty(device, 'opened', { value: false })
-      const res = await driver.send(new SendCarPlay('frame'))
+      const res = await driver.send(new SendCommand('frame'))
       expect(res).toBeNull()
       expect(device.transferOut).toHaveBeenCalledTimes(0)
     })
@@ -216,7 +221,7 @@ describe('DongleDriver', () => {
       })
 
       await driver.initialise(device)
-      const message = new SendCarPlay('frame')
+      const message = new SendCommand('frame')
       const res = await driver.send(message)
       expect(res).toBeTruthy()
       expect(device.transferOut).toHaveBeenCalledTimes(1)
@@ -236,7 +241,7 @@ describe('DongleDriver', () => {
       })
 
       await driver.initialise(device)
-      const message = new SendCarPlay('frame')
+      const message = new SendCommand('frame')
       const res = await driver.send(message)
       expect(res).toBeFalsy()
       expect(device.transferOut).toHaveBeenCalledTimes(1)
