@@ -1,0 +1,53 @@
+name: build_and_test
+
+on:
+  push:
+    branches:
+      - main
+      - master # TODO: Remove this in favor of main eventually?
+      - next
+  pull_request:
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    container:
+      image: node:18 # Tracking current LTS
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Cache Node packages
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Packager Version
+        run: npm version
+
+      - name: Install Dependencies
+        run: (npm install) && (cd examples/carplay-web-app && npm install)
+
+      - name: Lint sources
+        run: npm run lint
+
+      - name: Run Tests
+        run: npm run test
+
+      - name: Build example
+        run: (cd examples/carplay-web-app && npm run build)
+
+      - name: Zip up the built example
+        run: (cd examples/carplay-web-app/build && zip -r ../../../carplay-web-app.zip *)
+
+      - name: Upload built example
+        uses: actions/upload-artifact@v3
+        with:
+          name: carplay-web-app.zip
+          path: carplay-web-app.zip
+          retention-days: 30
