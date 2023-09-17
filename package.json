@@ -9,8 +9,8 @@
   },
   "scripts": {
     "prepare": "npm run build",
-    "start:node": "ts-node ./scripts/startNode.ts",
-    "config:icon": "ts-node ./scripts/configIcon.ts",
+    "start:node": "ts-node --esm ./scripts/startNode.ts",
+    "config:icon": "ts-node --esm ./scripts/configIcon.ts",
     "test": "jest --silent",
     "coverage": "jest --silent --coverage",
     "build": "tsc --build ./tsconfig.build.json ./src/web/tsconfig.json",

@@ -1,5 +1,5 @@
-import { DongleConfig } from '../src/modules/DongleDriver'
-import CarplayNode from '../src/node/CarplayNode'
+import { DongleConfig } from '../src/modules/DongleDriver.js'
+import CarplayNode from '../src/node/CarplayNode.js'
 const config: DongleConfig = {
   dpi: 160,
   nightMode: false,

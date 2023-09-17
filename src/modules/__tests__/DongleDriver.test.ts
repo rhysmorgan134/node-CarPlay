@@ -1,4 +1,8 @@
-import { DongleDriver, DEFAULT_CONFIG, DriverStateError } from '../DongleDriver'
+import {
+  DongleDriver,
+  DEFAULT_CONFIG,
+  DriverStateError,
+} from '../DongleDriver.js'
 import {
   FileAddress,
   HeartBeat,
@@ -9,13 +13,13 @@ import {
   SendOpen,
   SendString,
   SendableMessage,
-} from '../messages'
+} from '../messages.js'
 import {
   usbDeviceFactory,
   deviceConfig,
   usbInterface,
   usbEndpoint,
-} from './mocks/usbMocks'
+} from './mocks/usbMocks.js'
 
 const expectMessageSent = (device: USBDevice, message: SendableMessage) => {
   expect(device.transferOut).toHaveBeenCalledWith(

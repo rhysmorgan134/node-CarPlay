@@ -5,7 +5,7 @@ import {
   FileAddress,
   DongleDriver,
   SendIconConfig,
-} from '../src/modules'
+} from '../src/modules/index.js'
 import process from 'process'
 
 const { knownDevices } = DongleDriver
