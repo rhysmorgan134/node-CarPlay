@@ -57,13 +57,12 @@ class RecorderProcessor extends AudioWorkletProcessor {
   }
 
   flush() {
-    this.port.postMessage(
-      this.floatTo16BitPCM(
-        this._bytesWritten < this.bufferSize
-          ? this._buffer.slice(0, this._bytesWritten)
-          : this._buffer,
-      ),
+    const data = this.floatTo16BitPCM(
+      this._bytesWritten < this.bufferSize
+        ? this._buffer.slice(0, this._bytesWritten)
+        : this._buffer,
     )
+    this.port.postMessage(data, [data.buffer])
     this.initBuffer()
   }
 }

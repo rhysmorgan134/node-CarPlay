@@ -22,7 +22,7 @@ export default class WebMicrophone extends EventEmitter {
 
   private handleData = async (e: { data: Int16Array }) => {
     if (!this.active) return
-    this.emit('data', Buffer.from(e.data.buffer))
+    this.emit('data', e.data)
   }
 
   async start() {
