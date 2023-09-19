@@ -481,17 +481,17 @@ export class SendTouch extends SendableMessage {
 
 export class SendAudio extends SendableMessage {
   type = MessageType.AudioData
-  data: Buffer
+  data: Int16Array
 
   getData(): Buffer {
     const audioData = Buffer.alloc(12)
     audioData.writeUInt32LE(5, 0)
     audioData.writeFloatLE(0.0, 4)
     audioData.writeUInt32LE(3, 8)
-    return Buffer.concat([audioData, this.data])
+    return Buffer.concat([audioData, Buffer.from(this.data.buffer)])
   }
 
-  constructor(data: Buffer) {
+  constructor(data: Int16Array) {
     super()
     this.data = data
   }
