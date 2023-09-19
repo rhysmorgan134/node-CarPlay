@@ -1,5 +1,5 @@
 import { DongleConfig } from './DongleDriver.js'
-import { clamp } from './utils.js'
+import { clamp, getCurrentTimeInMs } from './utils.js'
 
 export enum KeyMapping {
   invalid = 0, //'invalid',
@@ -606,22 +606,27 @@ export class SendOpen extends SendableMessage {
 
 export class SendBoxSettings extends SendableMessage {
   type = MessageType.BoxSettings
-  mediaDelay: number
-  syncTime: number
+  private syncTime: number | null
+  private config: DongleConfig
 
   getData(): Buffer {
+    // Intentionally using "syncTime" from now to avoid any drift
+    // & delay between constructor() and getData()
+
     return Buffer.from(
-      JSON.stringify({ mediaDelay: this.mediaDelay, syncTime: this.syncTime }),
+      JSON.stringify({
+        mediaDelay: this.config.mediaDelay,
+        syncTime: this.syncTime ?? getCurrentTimeInMs(),
+        androidAutoSizeW: this.config.width,
+        androidAutoSizeH: this.config.height,
+      }),
       'ascii',
     )
   }
 
-  constructor(
-    mediaDelay: number = 300,
-    syncTime = Math.round(Date.now() / 1000),
-  ) {
+  constructor(config: DongleConfig, syncTime: number | null = null) {
     super()
-    this.mediaDelay = mediaDelay
+    this.config = config
     this.syncTime = syncTime
   }
 }
