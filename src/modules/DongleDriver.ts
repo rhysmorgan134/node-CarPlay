@@ -21,11 +21,17 @@ export type DongleConfig = {
   height: number
   fps: number
   dpi: number
+  format: number
+  iBoxVersion: number
+  packatMax: number
+  phoneWorkMode: number
   nightMode: boolean
   boxName: string
   hand: number
   mediaDelay: number
   audioTransferMode: boolean
+  wifiType: '2.4ghz' | '5ghz'
+  micType: 'box' | 'os'
 }
 
 export const DEFAULT_CONFIG: DongleConfig = {
@@ -33,11 +39,17 @@ export const DEFAULT_CONFIG: DongleConfig = {
   height: 640,
   fps: 20,
   dpi: 160,
+  format: 5,
+  iBoxVersion: 2,
+  phoneWorkMode: 2,
+  packatMax: 4915200,
   boxName: 'nodePlay',
   nightMode: false,
   hand: 0,
   mediaDelay: 300,
   audioTransferMode: false,
+  wifiType: '5ghz',
+  micType: 'os',
 }
 
 export class DriverStateError extends Error {}
@@ -193,6 +205,8 @@ export class DongleDriver extends EventEmitter {
       boxName: _boxName,
       mediaDelay,
       audioTransferMode,
+      wifiType,
+      micType,
     } = config
     const initMessages = [
       new SendNumber(_dpi, FileAddress.DPI),
@@ -202,8 +216,12 @@ export class DongleDriver extends EventEmitter {
       new SendBoolean(true, FileAddress.CHARGE_MODE),
       new SendString(_boxName, FileAddress.BOX_NAME),
       new SendBoxSettings(mediaDelay),
-      new SendCommand('wifiEn'),
-      new SendCommand(audioTransferMode ? 'phoneAudio' : 'dongleAudio'),
+      new SendCommand('wifiEnable'),
+      new SendCommand(wifiType === '5ghz' ? 'wifi5g' : 'wifi24g'),
+      new SendCommand(micType === 'box' ? 'boxMic' : 'mic'),
+      new SendCommand(
+        audioTransferMode ? 'audioTransferOn' : 'audioTransferOff',
+      ),
     ]
     await Promise.all(initMessages.map(this.send))
     setTimeout(() => {

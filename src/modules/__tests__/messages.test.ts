@@ -8,7 +8,7 @@ import {
   Command,
   HeaderBuildError,
   HiCarLink,
-  KeyMapping,
+  CommandMapping,
   ManufacturerInfo,
   MessageHeader,
   MessageType,
@@ -79,10 +79,10 @@ describe('MessageHeader', () => {
     it('constructs message based on type with data', () => {
       const header = new MessageHeader(4, MessageType.Command)
       const data = Buffer.alloc(4)
-      data.writeUInt32LE(KeyMapping.siri, 0)
+      data.writeUInt32LE(CommandMapping.siri, 0)
       const message = header.toMessage(data)
       expect(message instanceof Command).toBeTruthy()
-      expect((message as Command).value).toBe(KeyMapping.siri)
+      expect((message as Command).value).toBe(CommandMapping.siri)
     })
   })
 })
@@ -92,10 +92,10 @@ describe('Readable Messages', () => {
     it('constructs message with correct value', () => {
       const header = new MessageHeader(4, MessageType.Command)
       const data = Buffer.alloc(4)
-      data.writeUInt32LE(KeyMapping.frame, 0)
+      data.writeUInt32LE(CommandMapping.frame, 0)
       const message = header.toMessage(data)
       expect(message instanceof Command).toBeTruthy()
-      expect((message as Command).value).toBe(KeyMapping.frame)
+      expect((message as Command).value).toBe(CommandMapping.frame)
     })
   })
 
@@ -323,12 +323,12 @@ describe('Sendable Messages', () => {
   describe('Command Message', () => {
     it('constructs message with correct values', () => {
       const message = new SendCommand('siri')
-      expect(message.value).toBe(KeyMapping.siri)
+      expect(message.value).toBe(CommandMapping.siri)
     })
 
     it('serialises message data correctly', () => {
       const expectedData = Buffer.alloc(4)
-      expectedData.writeUInt32LE(KeyMapping.siri, 0)
+      expectedData.writeUInt32LE(CommandMapping.siri, 0)
 
       const message = new SendCommand('siri')
 

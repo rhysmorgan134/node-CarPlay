@@ -13,7 +13,7 @@ import {
   DongleDriver,
   DongleConfig,
   DEFAULT_CONFIG,
-  Key,
+  CommandValue,
   Command,
   AudioCommand,
 } from '../modules/index.js'
@@ -148,7 +148,7 @@ export default class CarplayNode {
     }
   }
 
-  sendKey = (action: Key) => {
+  sendKey = (action: CommandValue) => {
     this.dongleDriver.send(new SendCommand(action))
   }
   sendTouch = ({ type, x, y }: { type: number; x: number; y: number }) => {
