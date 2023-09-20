@@ -22,7 +22,7 @@ export enum HandDriveType {
 }
 
 export type DongleConfig = {
-  platform: 'carplay' | 'android-auto'
+  androidWorkMode?: boolean
   width: number
   height: number
   fps: number
@@ -41,7 +41,6 @@ export type DongleConfig = {
 }
 
 export const DEFAULT_CONFIG: DongleConfig = {
-  platform: 'carplay',
   width: 800,
   height: 640,
   fps: 20,
@@ -217,10 +216,6 @@ export class DongleDriver extends EventEmitter {
     const initMessages = [
       new SendNumber(_dpi, FileAddress.DPI),
       new SendOpen(config),
-      new SendBoolean(
-        config.platform === 'android-auto',
-        FileAddress.ANDROID_WORK_MODE,
-      ),
       new SendBoolean(_nightMode, FileAddress.NIGHT_MODE),
       new SendNumber(config.hand, FileAddress.HAND_DRIVE_MODE),
       new SendBoolean(true, FileAddress.CHARGE_MODE),
@@ -233,6 +228,11 @@ export class DongleDriver extends EventEmitter {
         audioTransferMode ? 'audioTransferOn' : 'audioTransferOff',
       ),
     ]
+    if (config.androidWorkMode) {
+      initMessages.push(
+        new SendBoolean(config.androidWorkMode, FileAddress.ANDROID_WORK_MODE),
+      )
+    }
     await Promise.all(initMessages.map(this.send))
     setTimeout(() => {
       this.send(new SendCommand('wifiConnect'))
