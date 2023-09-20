@@ -16,6 +16,11 @@ import EventEmitter from 'events'
 const CONFIG_NUMBER = 1
 const MAX_ERROR_COUNT = 5
 
+enum HandType {
+  LHD = 0,
+  RHD = 1,
+}
+
 export type DongleConfig = {
   platform: 'carplay' | 'android-auto'
   width: number
@@ -28,7 +33,7 @@ export type DongleConfig = {
   phoneWorkMode: number
   nightMode: boolean
   boxName: string
-  hand: number
+  hand: HandType
   mediaDelay: number
   audioTransferMode: boolean
   wifiType: '2.4ghz' | '5ghz'
@@ -47,7 +52,7 @@ export const DEFAULT_CONFIG: DongleConfig = {
   packatMax: 4915200,
   boxName: 'nodePlay',
   nightMode: false,
-  hand: 0,
+  hand: HandType.LHD,
   mediaDelay: 300,
   audioTransferMode: false,
   wifiType: '5ghz',
@@ -217,7 +222,7 @@ export class DongleDriver extends EventEmitter {
         FileAddress.ANDROID_WORK_MODE,
       ),
       new SendBoolean(_nightMode, FileAddress.NIGHT_MODE),
-      new SendBoolean(false, FileAddress.HAND_DRIVE_MODE),
+      new SendNumber(config.hand, FileAddress.HAND_DRIVE_MODE),
       new SendBoolean(true, FileAddress.CHARGE_MODE),
       new SendString(_boxName, FileAddress.BOX_NAME),
       new SendBoxSettings(config),
