@@ -1,5 +1,5 @@
 import { DongleConfig } from './DongleDriver.js'
-import { clamp } from './utils.js'
+import { clamp, getCurrentTimeInMs } from './utils.js'
 
 export enum CommandMapping {
   invalid = 0, //'invalid',
@@ -542,17 +542,17 @@ export class SendTouch extends SendableMessage {
 
 export class SendAudio extends SendableMessage {
   type = MessageType.AudioData
-  data: Buffer
+  data: Int16Array
 
   getData(): Buffer {
     const audioData = Buffer.alloc(12)
     audioData.writeUInt32LE(5, 0)
     audioData.writeFloatLE(0.0, 4)
     audioData.writeUInt32LE(3, 8)
-    return Buffer.concat([audioData, this.data])
+    return Buffer.concat([audioData, Buffer.from(this.data.buffer)])
   }
 
-  constructor(data: Buffer) {
+  constructor(data: Int16Array) {
     super()
     this.data = data
   }
@@ -668,22 +668,27 @@ export class SendOpen extends SendableMessage {
 
 export class SendBoxSettings extends SendableMessage {
   type = MessageType.BoxSettings
-  mediaDelay: number
-  syncTime: number
+  private syncTime: number | null
+  private config: DongleConfig
 
   getData(): Buffer {
+    // Intentionally using "syncTime" from now to avoid any drift
+    // & delay between constructor() and getData()
+
     return Buffer.from(
-      JSON.stringify({ mediaDelay: this.mediaDelay, syncTime: this.syncTime }),
+      JSON.stringify({
+        mediaDelay: this.config.mediaDelay,
+        syncTime: this.syncTime ?? getCurrentTimeInMs(),
+        androidAutoSizeW: this.config.width,
+        androidAutoSizeH: this.config.height,
+      }),
       'ascii',
     )
   }
 
-  constructor(
-    mediaDelay: number = 300,
-    syncTime = Math.round(Date.now() / 1000),
-  ) {
+  constructor(config: DongleConfig, syncTime: number | null = null) {
     super()
-    this.mediaDelay = mediaDelay
+    this.config = config
     this.syncTime = syncTime
   }
 }
