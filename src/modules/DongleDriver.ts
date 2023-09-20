@@ -17,6 +17,7 @@ const CONFIG_NUMBER = 1
 const MAX_ERROR_COUNT = 5
 
 export type DongleConfig = {
+  platform: 'carplay' | 'android-auto'
   width: number
   height: number
   fps: number
@@ -35,6 +36,7 @@ export type DongleConfig = {
 }
 
 export const DEFAULT_CONFIG: DongleConfig = {
+  platform: 'carplay',
   width: 800,
   height: 640,
   fps: 20,
@@ -210,6 +212,10 @@ export class DongleDriver extends EventEmitter {
     const initMessages = [
       new SendNumber(_dpi, FileAddress.DPI),
       new SendOpen(config),
+      new SendBoolean(
+        config.platform === 'android-auto',
+        FileAddress.ANDROID_WORK_MODE,
+      ),
       new SendBoolean(_nightMode, FileAddress.NIGHT_MODE),
       new SendBoolean(false, FileAddress.HAND_DRIVE_MODE),
       new SendBoolean(true, FileAddress.CHARGE_MODE),
