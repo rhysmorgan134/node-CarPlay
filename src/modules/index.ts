@@ -1,2 +1,7 @@
 export * from './messages.js'
-export { DongleConfig, DEFAULT_CONFIG, DongleDriver } from './DongleDriver.js'
+export {
+  HandDriveType,
+  DongleConfig,
+  DEFAULT_CONFIG,
+  DongleDriver,
+} from './DongleDriver.js'

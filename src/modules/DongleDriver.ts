@@ -16,7 +16,7 @@ import EventEmitter from 'events'
 const CONFIG_NUMBER = 1
 const MAX_ERROR_COUNT = 5
 
-enum HandType {
+export enum HandDriveType {
   LHD = 0,
   RHD = 1,
 }
@@ -33,7 +33,7 @@ export type DongleConfig = {
   phoneWorkMode: number
   nightMode: boolean
   boxName: string
-  hand: HandType
+  hand: HandDriveType
   mediaDelay: number
   audioTransferMode: boolean
   wifiType: '2.4ghz' | '5ghz'
@@ -52,7 +52,7 @@ export const DEFAULT_CONFIG: DongleConfig = {
   packatMax: 4915200,
   boxName: 'nodePlay',
   nightMode: false,
-  hand: HandType.LHD,
+  hand: HandDriveType.LHD,
   mediaDelay: 300,
   audioTransferMode: false,
   wifiType: '5ghz',
