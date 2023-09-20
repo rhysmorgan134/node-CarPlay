@@ -2,8 +2,7 @@
 
 In the root folder of node-CarPlay run:
 ```
-pnpm i
-pnpm build
+npm i
 ```
 
 Then in this folder:
