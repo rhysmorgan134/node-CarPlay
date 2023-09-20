@@ -29,7 +29,7 @@ export type DongleConfig = {
   dpi: number
   format: number
   iBoxVersion: number
-  packatMax: number
+  packetMax: number
   phoneWorkMode: number
   nightMode: boolean
   boxName: string
@@ -48,7 +48,7 @@ export const DEFAULT_CONFIG: DongleConfig = {
   format: 5,
   iBoxVersion: 2,
   phoneWorkMode: 2,
-  packatMax: 4915200,
+  packetMax: 49152,
   boxName: 'nodePlay',
   nightMode: false,
   hand: HandDriveType.LHD,
