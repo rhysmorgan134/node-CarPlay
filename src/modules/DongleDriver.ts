@@ -191,7 +191,6 @@ export class DongleDriver extends EventEmitter {
       dpi: _dpi,
       nightMode: _nightMode,
       boxName: _boxName,
-      mediaDelay,
       audioTransferMode,
     } = config
     const initMessages = [
@@ -201,7 +200,7 @@ export class DongleDriver extends EventEmitter {
       new SendBoolean(false, FileAddress.HAND_DRIVE_MODE),
       new SendBoolean(true, FileAddress.CHARGE_MODE),
       new SendString(_boxName, FileAddress.BOX_NAME),
-      new SendBoxSettings(mediaDelay),
+      new SendBoxSettings(config),
       new SendCommand('wifiEn'),
       new SendCommand(audioTransferMode ? 'phoneAudio' : 'dongleAudio'),
     ]
