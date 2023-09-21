@@ -3,7 +3,9 @@ import { clamp, getCurrentTimeInMs } from './utils.js'
 
 export enum CommandMapping {
   invalid = 0, //'invalid',
-  car = 3, //'Carplay Interface My Car button clicked',
+  startRecordAudio = 1,
+  stopRecordAudio = 2,
+  requestHostUI = 3, //'Carplay Interface My Car button clicked',
   siri = 5, //'Siri Button',
   mic = 7, //'Car Microphone',
   boxMic = 15, //'Box Microphone',
@@ -25,15 +27,20 @@ export enum CommandMapping {
   pause = 202, //'Button Pause',
   next = 204, //'Button Next Track',
   prev = 205, //'Button Prev Track',
+  requestVideoFocus = 500,
+  releaseVideoFocus = 501,
   wifiEnable = 1000,
   autoConnetEnable = 1001,
   wifiConnect = 1002,
-  scanningDevices = 1003,
-  devicesFound = 1004,
+  scanningDevice = 1003,
+  deviceFound = 1004,
+  deviceNotFound = 1005,
+  connectDeviceFailed = 1006,
   btConnected = 1007,
   btDisconnected = 1008,
   wifiConnected = 1009,
   wifiDisconnected = 1010,
+  btPairStart = 1011,
   wifiPair = 1012,
 }
 
@@ -644,7 +651,7 @@ export class SendOpen extends SendableMessage {
     const format = Buffer.alloc(4)
     format.writeUInt32LE(config.format)
     const packetMax = Buffer.alloc(4)
-    packetMax.writeUInt32LE(config.packatMax)
+    packetMax.writeUInt32LE(config.packetMax)
     const iBox = Buffer.alloc(4)
     iBox.writeUInt32LE(config.iBoxVersion)
     const phoneMode = Buffer.alloc(4)
