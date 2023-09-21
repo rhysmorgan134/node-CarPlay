@@ -13,11 +13,8 @@ let config: Partial<DongleConfig> | null = null
 const handleMessage = (message: CarplayMessage) => {
   const { type, message: payload } = message
   if (type === 'video') {
-    //TODO: fix type as its clashing with window.postMessage
-    //@ts-ignore
     postMessage(message, [payload.data.buffer])
   } else if (type === 'audio' && payload.data) {
-    //@ts-ignore
     postMessage(message, [payload.data.buffer])
   } else {
     postMessage(message)
