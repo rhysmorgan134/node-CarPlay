@@ -40,14 +40,6 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
         player.feed(data)
       } else if (audio.command) {
         switch (audio.command) {
-          case AudioCommand.AudioSiriStart:
-          case AudioCommand.AudioPhonecallStart:
-            mic?.start()
-            break
-          case AudioCommand.AudioSiriStop:
-          case AudioCommand.AudioPhonecallStop:
-            mic?.stop()
-            break
           case AudioCommand.AudioNaviStart:
             const navPlayer = getAudioPlayer(decodeTypeMap[audio.decodeType])
             navPlayer.volume(defaultNavVolume)
@@ -60,7 +52,7 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
         }
       }
     },
-    [getAudioPlayer, mic],
+    [getAudioPlayer],
   )
 
   // audio init
@@ -94,7 +86,15 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
     }
   }, [audioPlayers, worker])
 
-  return { processAudio }
+  const startRecording = useCallback(() => {
+    mic?.start()
+  }, [mic])
+
+  const stopRecording = useCallback(() => {
+    mic?.stop()
+  }, [mic])
+
+  return { processAudio, startRecording, stopRecording }
 }
 
 export default useCarplayAudio

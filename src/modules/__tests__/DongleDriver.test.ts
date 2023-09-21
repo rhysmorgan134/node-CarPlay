@@ -168,8 +168,8 @@ describe('DongleDriver', () => {
         new SendString(DEFAULT_CONFIG.boxName, FileAddress.BOX_NAME),
       )
       expectMessageSent(device, new SendBoxSettings(DEFAULT_CONFIG))
-      expectMessageSent(device, new SendCommand('wifiEn'))
-      expectMessageSent(device, new SendCommand('dongleAudio'))
+      expectMessageSent(device, new SendCommand('wifiEnable'))
+      expectMessageSent(device, new SendCommand('audioTransferOff'))
 
       jest.runOnlyPendingTimers()
 

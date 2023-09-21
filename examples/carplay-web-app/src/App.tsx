@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RotatingLines } from 'react-loader-spinner'
 import './App.css'
-import { findDevice, requestDevice, DongleConfig } from 'node-carplay/web'
+import {
+  findDevice,
+  requestDevice,
+  DongleConfig,
+  CommandMapping,
+} from 'node-carplay/web'
 import JMuxer from 'jmuxer'
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
@@ -32,7 +37,8 @@ function App() {
     [],
   )
 
-  const { processAudio } = useCarplayAudio(carplayWorker)
+  const { processAudio, startRecording, stopRecording } =
+    useCarplayAudio(carplayWorker)
 
   // subscribe to worker messages
   useEffect(() => {
@@ -62,6 +68,19 @@ function App() {
         case 'media':
           //TODO: implement
           break
+        case 'command':
+          const {
+            message: { value },
+          } = ev.data
+          switch (value) {
+            case CommandMapping.startRecordAudio:
+              startRecording()
+              break
+            case CommandMapping.stopRecordAudio:
+              stopRecording()
+              break
+          }
+          break
         case 'failure':
           console.error(
             `Carplay initialization failed -- Reloading page in ${RETRY_DELAY_MS}ms`,
@@ -72,7 +91,14 @@ function App() {
           break
       }
     }
-  }, [carplayWorker, jmuxer, processAudio, receivingVideo])
+  }, [
+    carplayWorker,
+    jmuxer,
+    processAudio,
+    receivingVideo,
+    startRecording,
+    stopRecording,
+  ])
 
   // video init
   useEffect(() => {

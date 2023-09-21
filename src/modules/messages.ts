@@ -1,16 +1,23 @@
 import { DongleConfig } from './DongleDriver.js'
 import { clamp, getCurrentTimeInMs } from './utils.js'
 
-export enum KeyMapping {
+export enum CommandMapping {
   invalid = 0, //'invalid',
-  car = 3, //'Carplay Interface My Car button clicked',
+  startRecordAudio = 1,
+  stopRecordAudio = 2,
+  requestHostUI = 3, //'Carplay Interface My Car button clicked',
   siri = 5, //'Siri Button',
   mic = 7, //'Car Microphone',
+  boxMic = 15, //'Box Microphone',
+  enableNightMode = 16, // night mode
+  disableNightMode = 17, // disable night mode
+  wifi24g = 24, //'2.4G Wifi',
+  wifi5g = 25, //'5G Wifi',
   left = 100, //'Button Left',
   right = 101, //'Button Right',
   frame = 12,
-  phoneAudio = 22, // Phone will Stream audio directly to car system and not dongle
-  dongleAudio = 23, // DEFAULT - Phone will stream audio to the dongle and it will send it over the link
+  audioTransferOn = 22, // Phone will Stream audio directly to car system and not dongle
+  audioTransferOff = 23, // DEFAULT - Phone will stream audio to the dongle and it will send it over the link
   selectDown = 104, //'Button Select Down',
   selectUp = 105, //'Button Select Up',
   back = 106, //'Button Back',
@@ -20,34 +27,47 @@ export enum KeyMapping {
   pause = 202, //'Button Pause',
   next = 204, //'Button Next Track',
   prev = 205, //'Button Prev Track',
-  wifiEn = 1000,
-  wifiPair = 1012,
+  requestVideoFocus = 500,
+  releaseVideoFocus = 501,
+  wifiEnable = 1000,
+  autoConnetEnable = 1001,
   wifiConnect = 1002,
+  scanningDevice = 1003,
+  deviceFound = 1004,
+  deviceNotFound = 1005,
+  connectDeviceFailed = 1006,
+  btConnected = 1007,
+  btDisconnected = 1008,
+  wifiConnected = 1009,
+  wifiDisconnected = 1010,
+  btPairStart = 1011,
+  wifiPair = 1012,
 }
 
-export type Key = keyof typeof KeyMapping
+export type CommandValue = keyof typeof CommandMapping
 
 export enum MessageType {
-  SendFile = 0x99,
   Open = 0x01,
-  HeartBeat = 0xaa,
-  ManufacturerInfo = 0x14,
-  Command = 0x08,
-  LogoType = 0x09,
-  SoftwareVersion = 0xcc,
-  BluetoothAddress = 0x0a,
-  BluetoothPIN = 0x0c,
   Plugged = 0x02,
   Unplugged = 0x04,
+  Touch = 0x05,
   VideoData = 0x06,
   AudioData = 0x07,
-  Touch = 0x05,
+  Command = 0x08,
+  LogoType = 0x09,
+  BluetoothAddress = 0x0a,
+  BluetoothPIN = 0x0c,
   BluetoothDeviceName = 0x0d,
   WifiDeviceName = 0x0e,
   BluetoothPairedList = 0x12,
-  MediaData = 0x2a,
+  ManufacturerInfo = 0x14,
   HiCarLink = 0x18,
   BoxSettings = 0x19,
+  MediaData = 0x2a,
+  Verbose = 0x88,
+  SendFile = 0x99,
+  HeartBeat = 0xaa,
+  SoftwareVersion = 0xcc,
 }
 
 export class HeaderBuildError extends Error {}
@@ -122,6 +142,10 @@ export class MessageHeader {
           return new HiCarLink(this, data)
         case MessageType.BluetoothPairedList:
           return new BluetoothPairedList(this, data)
+        case MessageType.Open:
+          return new Opened(this, data)
+        case MessageType.BoxSettings:
+          return new BoxInfo(this, data)
         default:
           console.debug(`Unknown message type: ${type}`)
           return null
@@ -166,7 +190,7 @@ export abstract class Message {
 }
 
 export class Command extends Message {
-  value: KeyMapping
+  value: CommandMapping
 
   constructor(header: MessageHeader, data: Buffer) {
     super(header)
@@ -409,6 +433,50 @@ export class MediaData extends Message {
   }
 }
 
+export class Opened extends Message {
+  width: number
+  height: number
+  fps: number
+  format: number
+  packetMax: number
+  iBox: number
+  phoneMode: number
+
+  constructor(header: MessageHeader, data: Buffer) {
+    super(header)
+    this.width = data.readUInt32LE(0)
+    this.height = data.readUInt32LE(4)
+    this.fps = data.readUInt32LE(8)
+    this.format = data.readUInt32LE(12)
+    this.packetMax = data.readUInt32LE(16)
+    this.iBox = data.readUInt32LE(20)
+    this.phoneMode = data.readUInt32LE(24)
+  }
+}
+export class BoxInfo extends Message {
+  settings:
+    | {
+        HiCar: number
+        OemName: string
+        WiFiChannel: number
+        boxType: string
+        hwVersion: string
+        productType: string
+        uuid: string
+      }
+    | {
+        MDLinkType: string
+        MDModel: string
+        MDOSVersion: string
+        MDLinkVersion: string
+        cpuTemp: number
+      }
+  constructor(header: MessageHeader, data: Buffer) {
+    super(header)
+    this.settings = JSON.parse(data.toString())
+  }
+}
+
 export abstract class SendableMessage {
   abstract type: MessageType
 
@@ -429,7 +497,7 @@ export abstract class SendableMessage {
 
 export class SendCommand extends SendableMessage {
   type = MessageType.Command
-  value: KeyMapping
+  value: CommandMapping
 
   getData(): Buffer {
     const data = Buffer.alloc(4)
@@ -437,9 +505,9 @@ export class SendCommand extends SendableMessage {
     return data
   }
 
-  constructor(value: keyof typeof KeyMapping) {
+  constructor(value: CommandValue) {
     super()
-    this.value = KeyMapping[value]
+    this.value = CommandMapping[value]
   }
 }
 
@@ -533,6 +601,7 @@ export enum FileAddress {
   ICON_120 = '/etc/icon_120x120.png',
   ICON_180 = '/etc/icon_180x180.png',
   ICON_250 = '/etc/icon_256x256.png',
+  ANDROID_WORK_MODE = '/etc/android_work_mode',
 }
 
 export class SendNumber extends SendFile {
@@ -572,21 +641,21 @@ export class SendOpen extends SendableMessage {
   config: DongleConfig
 
   getData(): Buffer {
-    const { width: _width, height: _height, fps: _fps } = this.config
+    const { config } = this
     const width = Buffer.alloc(4)
-    width.writeUInt32LE(_width)
+    width.writeUInt32LE(config.width)
     const height = Buffer.alloc(4)
-    height.writeUInt32LE(_height)
+    height.writeUInt32LE(config.height)
     const fps = Buffer.alloc(4)
-    fps.writeUInt32LE(_fps)
+    fps.writeUInt32LE(config.fps)
     const format = Buffer.alloc(4)
-    format.writeUInt32LE(2)
+    format.writeUInt32LE(config.format)
     const packetMax = Buffer.alloc(4)
-    packetMax.writeUInt32LE(49125)
+    packetMax.writeUInt32LE(config.packetMax)
     const iBox = Buffer.alloc(4)
-    iBox.writeUInt32LE(2)
+    iBox.writeUInt32LE(config.iBoxVersion)
     const phoneMode = Buffer.alloc(4)
-    phoneMode.writeUInt32LE(2)
+    phoneMode.writeUInt32LE(config.phoneWorkMode)
     return Buffer.concat([
       width,
       height,

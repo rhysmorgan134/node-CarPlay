@@ -16,16 +16,28 @@ import EventEmitter from 'events'
 const CONFIG_NUMBER = 1
 const MAX_ERROR_COUNT = 5
 
+export enum HandDriveType {
+  LHD = 0,
+  RHD = 1,
+}
+
 export type DongleConfig = {
+  androidWorkMode?: boolean
   width: number
   height: number
   fps: number
   dpi: number
+  format: number
+  iBoxVersion: number
+  packetMax: number
+  phoneWorkMode: number
   nightMode: boolean
   boxName: string
-  hand: number
+  hand: HandDriveType
   mediaDelay: number
   audioTransferMode: boolean
+  wifiType: '2.4ghz' | '5ghz'
+  micType: 'box' | 'os'
 }
 
 export const DEFAULT_CONFIG: DongleConfig = {
@@ -33,11 +45,17 @@ export const DEFAULT_CONFIG: DongleConfig = {
   height: 640,
   fps: 20,
   dpi: 160,
+  format: 5,
+  iBoxVersion: 2,
+  phoneWorkMode: 2,
+  packetMax: 49152,
   boxName: 'nodePlay',
   nightMode: false,
-  hand: 0,
+  hand: HandDriveType.LHD,
   mediaDelay: 300,
   audioTransferMode: false,
+  wifiType: '5ghz',
+  micType: 'os',
 }
 
 export class DriverStateError extends Error {}
@@ -192,18 +210,29 @@ export class DongleDriver extends EventEmitter {
       nightMode: _nightMode,
       boxName: _boxName,
       audioTransferMode,
+      wifiType,
+      micType,
     } = config
     const initMessages = [
       new SendNumber(_dpi, FileAddress.DPI),
       new SendOpen(config),
       new SendBoolean(_nightMode, FileAddress.NIGHT_MODE),
-      new SendBoolean(false, FileAddress.HAND_DRIVE_MODE),
+      new SendNumber(config.hand, FileAddress.HAND_DRIVE_MODE),
       new SendBoolean(true, FileAddress.CHARGE_MODE),
       new SendString(_boxName, FileAddress.BOX_NAME),
       new SendBoxSettings(config),
-      new SendCommand('wifiEn'),
-      new SendCommand(audioTransferMode ? 'phoneAudio' : 'dongleAudio'),
+      new SendCommand('wifiEnable'),
+      new SendCommand(wifiType === '5ghz' ? 'wifi5g' : 'wifi24g'),
+      new SendCommand(micType === 'box' ? 'boxMic' : 'mic'),
+      new SendCommand(
+        audioTransferMode ? 'audioTransferOn' : 'audioTransferOff',
+      ),
     ]
+    if (config.androidWorkMode) {
+      initMessages.push(
+        new SendBoolean(config.androidWorkMode, FileAddress.ANDROID_WORK_MODE),
+      )
+    }
     await Promise.all(initMessages.map(this.send))
     setTimeout(() => {
       this.send(new SendCommand('wifiConnect'))
