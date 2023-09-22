@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "target": "es2022",
+    "lib": ["ES2023"],
+    "module": "ES2022",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "Bundler",
+    "sourceMap": true,
+    "declaration": true
+  },
+  "exclude": ["node_modules", "src/web/*"],
+  "include": ["src/**/*"]
+}

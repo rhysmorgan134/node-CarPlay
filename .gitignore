@@ -8,7 +8,6 @@ lerna-debug.log*
 .pnpm-debug.log*
 .apk
 *.apk
-modules/assets/
 .idea
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
@@ -120,3 +119,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# macOS Misc
+.DS_Store
