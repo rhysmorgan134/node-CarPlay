@@ -38,6 +38,7 @@ export type DongleConfig = {
   audioTransferMode: boolean
   wifiType: '2.4ghz' | '5ghz'
   micType: 'box' | 'os'
+  frameInterval: number | null
 }
 
 export const DEFAULT_CONFIG: DongleConfig = {
@@ -56,6 +57,7 @@ export const DEFAULT_CONFIG: DongleConfig = {
   audioTransferMode: false,
   wifiType: '5ghz',
   micType: 'os',
+  frameInterval: 5000,
 }
 
 export class DriverStateError extends Error {}
@@ -243,9 +245,12 @@ export class DongleDriver extends EventEmitter {
     this._heartbeatInterval = setInterval(() => {
       this.send(new HeartBeat())
     }, 2000)
-    this._frameInterval = setInterval(() => {
-      this.send(new SendCommand('frame'))
-    }, 5000)
+
+    if (config.frameInterval) {
+      this._frameInterval = setInterval(() => {
+        this.send(new SendCommand('frame'))
+      }, config.frameInterval)
+    }
   }
 
   close = async () => {
