@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { RotatingLines } from 'react-loader-spinner'
 import './App.css'
 import {
@@ -21,13 +21,14 @@ const config: Partial<DongleConfig> = {
   fps: 60,
   mediaDelay: 0,
 }
-const RETRY_DELAY_MS = 5000
+const RETRY_DELAY_MS = 30000
 
 function App() {
   const [isPlugged, setPlugged] = useState(false)
   const [noDevice, setNoDevice] = useState(false)
   const [receivingVideo, setReceivingVideo] = useState(false)
   const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const carplayWorker = useMemo(
     () =>
@@ -39,6 +40,13 @@ function App() {
 
   const { processAudio, startRecording, stopRecording } =
     useCarplayAudio(carplayWorker)
+
+  const clearRetryTimeout = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current)
+      retryTimeoutRef.current = null
+    }
+  }, [])
 
   // subscribe to worker messages
   useEffect(() => {
@@ -55,6 +63,8 @@ function App() {
           // if document is hidden we dont need to feed frames
           if (!jmuxer || document.hidden) return
           if (!receivingVideo) setReceivingVideo(true)
+          clearRetryTimeout()
+
           const { message: video } = ev.data
           jmuxer.feed({
             video: video.data,
@@ -62,6 +72,8 @@ function App() {
           })
           break
         case 'audio':
+          clearRetryTimeout()
+
           const { message: audio } = ev.data
           processAudio(audio)
           break
@@ -82,17 +94,20 @@ function App() {
           }
           break
         case 'failure':
-          console.error(
-            `Carplay initialization failed -- Reloading page in ${RETRY_DELAY_MS}ms`,
-          )
-          setTimeout(() => {
-            window.location.reload()
-          }, RETRY_DELAY_MS)
+          if (retryTimeoutRef.current == null) {
+            console.error(
+              `Carplay initialization failed -- Reloading page in ${RETRY_DELAY_MS}ms`,
+            )
+            retryTimeoutRef.current = setTimeout(() => {
+              window.location.reload()
+            }, RETRY_DELAY_MS)
+          }
           break
       }
     }
   }, [
     carplayWorker,
+    clearRetryTimeout,
     jmuxer,
     processAudio,
     receivingVideo,
