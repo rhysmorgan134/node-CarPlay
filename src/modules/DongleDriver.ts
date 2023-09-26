@@ -10,6 +10,7 @@ import {
   SendNumber,
   SendOpen,
   SendBoxSettings,
+  PhoneType,
 } from './messages.js'
 import EventEmitter from 'events'
 
@@ -19,6 +20,14 @@ const MAX_ERROR_COUNT = 5
 export enum HandDriveType {
   LHD = 0,
   RHD = 1,
+}
+
+export type PhoneTypeConfig = {
+  frameInterval: number | null
+}
+
+type PhoneTypeConfigMap = {
+  [K in PhoneType]: PhoneTypeConfig
 }
 
 export type DongleConfig = {
@@ -38,7 +47,7 @@ export type DongleConfig = {
   audioTransferMode: boolean
   wifiType: '2.4ghz' | '5ghz'
   micType: 'box' | 'os'
-  frameInterval: number | null
+  phoneConfig: Partial<PhoneTypeConfigMap>
 }
 
 export const DEFAULT_CONFIG: DongleConfig = {
@@ -57,14 +66,20 @@ export const DEFAULT_CONFIG: DongleConfig = {
   audioTransferMode: false,
   wifiType: '5ghz',
   micType: 'os',
-  frameInterval: 5000,
+  phoneConfig: {
+    [PhoneType.CarPlay]: {
+      frameInterval: 5000,
+    },
+    [PhoneType.AndroidAuto]: {
+      frameInterval: null,
+    },
+  },
 }
 
 export class DriverStateError extends Error {}
 
 export class DongleDriver extends EventEmitter {
   private _heartbeatInterval: NodeJS.Timer | null = null
-  private _frameInterval: NodeJS.Timer | null = null
   private _device: USBDevice | null = null
   private _inEP: USBEndpoint | null = null
   private _outEP: USBEndpoint | null = null
@@ -245,12 +260,6 @@ export class DongleDriver extends EventEmitter {
     this._heartbeatInterval = setInterval(() => {
       this.send(new HeartBeat())
     }, 2000)
-
-    if (config.frameInterval) {
-      this._frameInterval = setInterval(() => {
-        this.send(new SendCommand('frame'))
-      }, config.frameInterval)
-    }
   }
 
   close = async () => {
@@ -260,10 +269,6 @@ export class DongleDriver extends EventEmitter {
     if (this._heartbeatInterval) {
       clearInterval(this._heartbeatInterval)
       this._heartbeatInterval = null
-    }
-    if (this._frameInterval) {
-      clearInterval(this._frameInterval)
-      this._frameInterval = null
     }
     await this._device.close()
     this._device = null

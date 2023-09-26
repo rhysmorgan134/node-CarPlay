@@ -32,6 +32,7 @@ export type CarplayMessage =
 
 export default class CarplayNode {
   private _pairTimeout: NodeJS.Timeout | null = null
+  private _frameInterval: NodeJS.Timer | null = null
   private _config: DongleConfig
   public dongleDriver: DongleDriver
 
@@ -45,6 +46,15 @@ export default class CarplayNode {
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
         this.clearPairTimeout()
+        const phoneTypeConfg = this._config.phoneConfig[message.phoneType]
+        if (phoneTypeConfg?.frameInterval) {
+          this._frameInterval = setInterval(
+            () => {
+              this.dongleDriver.send(new SendCommand('frame'))
+            },
+            phoneTypeConfg?.frameInterval,
+          )
+        }
         this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
         this.onmessage?.({ type: 'unplugged' })
@@ -138,6 +148,18 @@ export default class CarplayNode {
     if (!initialised) {
       console.log('carplay not initialised, retrying in 2s')
       setTimeout(this.start, 2000)
+    }
+  }
+
+  stop = async () => {
+    try {
+      if (this._frameInterval) {
+        clearInterval(this._frameInterval)
+        this._frameInterval = null
+      }
+      await this.dongleDriver.close()
+    } catch (err) {
+      console.error(err)
     }
   }
 

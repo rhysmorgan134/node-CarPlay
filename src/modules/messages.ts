@@ -272,8 +272,16 @@ export class BluetoothPairedList extends Message {
   }
 }
 
+export enum PhoneType {
+  AndroidMirror = 1,
+  CarPlay = 3,
+  iPhoneMirror = 4,
+  AndroidAuto = 5,
+  HiCar = 6,
+}
+
 export class Plugged extends Message {
-  phoneType: number
+  phoneType: PhoneType
   wifi?: number
 
   constructor(header: MessageHeader, data: Buffer) {
@@ -284,13 +292,13 @@ export class Plugged extends Message {
       this.wifi = data.readUInt32LE(4)
       console.debug(
         'wifi avail, phone type: ',
-        this.phoneType,
+        PhoneType[this.phoneType],
         ' wifi: ',
         this.wifi,
       )
     } else {
       this.phoneType = data.readUInt32LE(0)
-      console.debug('no wifi avail, phone type: ', this.phoneType)
+      console.debug('no wifi avail, phone type: ', PhoneType[this.phoneType])
     }
   }
 }

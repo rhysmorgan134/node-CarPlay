@@ -57,6 +57,7 @@ export const requestDevice = async (): Promise<USBDevice | null> => {
 export default class CarplayWeb {
   private _started: boolean = false
   private _pairTimeout: NodeJS.Timeout | null = null
+  private _frameInterval: NodeJS.Timer | null = null
   private _config: DongleConfig
   public dongleDriver: DongleDriver
 
@@ -66,6 +67,17 @@ export default class CarplayWeb {
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
         this.clearPairTimeout()
+
+        const phoneTypeConfg = this._config.phoneConfig[message.phoneType]
+        if (phoneTypeConfg?.frameInterval) {
+          this._frameInterval = setInterval(
+            () => {
+              this.dongleDriver.send(new SendCommand('frame'))
+            },
+            phoneTypeConfg?.frameInterval,
+          )
+        }
+
         this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
         this.onmessage?.({ type: 'unplugged' })
@@ -116,6 +128,10 @@ export default class CarplayWeb {
 
   stop = async () => {
     try {
+      if (this._frameInterval) {
+        clearInterval(this._frameInterval)
+        this._frameInterval = null
+      }
       await this.dongleDriver.close()
     } catch (err) {
       console.error(err)
