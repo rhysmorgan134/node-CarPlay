@@ -25,7 +25,7 @@ const RETRY_DELAY_MS = 30000
 
 function App() {
   const [isPlugged, setPlugged] = useState(false)
-  const [noDevice, setNoDevice] = useState(false)
+  const [deviceFound, setDeviceFound] = useState<Boolean | null>(null)
   const [receivingVideo, setReceivingVideo] = useState(false)
   const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -134,10 +134,10 @@ function App() {
     async (request: boolean = false) => {
       const device = request ? await requestDevice() : await findDevice()
       if (device) {
-        setNoDevice(false)
+        setDeviceFound(true)
         carplayWorker.postMessage({ type: 'start', payload: config })
       } else {
-        setNoDevice(true)
+        setDeviceFound(false)
       }
     },
     [carplayWorker],
@@ -153,7 +153,7 @@ function App() {
       const device = await findDevice()
       if (!device) {
         carplayWorker.postMessage({ type: 'stop' })
-        setNoDevice(true)
+        setDeviceFound(false)
       }
     }
 
@@ -166,7 +166,7 @@ function App() {
 
   const sendTouchEvent = useCarplayTouch(carplayWorker, width, height)
 
-  const isLoading = !noDevice && !receivingVideo
+  const isLoading = !receivingVideo || !isPlugged
 
   return (
     <div
@@ -174,7 +174,7 @@ function App() {
       id={'main'}
       className="App"
     >
-      {(noDevice || isLoading) && (
+      {isLoading && (
         <div
           style={{
             position: 'absolute',
@@ -185,12 +185,12 @@ function App() {
             alignItems: 'center',
           }}
         >
-          {noDevice && (
+          {deviceFound === false && (
             <button onClick={onClick} rel="noopener noreferrer">
               Plug-In Carplay Dongle and Press
             </button>
           )}
-          {isLoading && (
+          {deviceFound === true && (
             <RotatingLines
               strokeColor="grey"
               strokeWidth="5"
@@ -218,7 +218,7 @@ function App() {
       >
         <video
           id="video"
-          style={isPlugged ? { height: '100%' } : undefined}
+          style={isPlugged ? { height: '100%' } : { display: 'none' }}
           autoPlay
           muted
         />

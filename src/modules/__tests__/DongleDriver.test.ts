@@ -176,7 +176,6 @@ describe('DongleDriver', () => {
       // delayed wifi connect and interval messages
       expectMessageSent(device, new SendCommand('wifiConnect'))
       expectMessageSent(device, new HeartBeat())
-      expectMessageSent(device, new SendCommand('frame'))
     })
 
     it('sets up correct timeouts and intervals when device is open', async () => {
@@ -192,10 +191,9 @@ describe('DongleDriver', () => {
       // wifi connect
       expect(setTimeout).toHaveBeenCalledTimes(1)
       expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 1000)
-      // frame and heartbeat intervals
-      expect(setInterval).toHaveBeenCalledTimes(2)
+      // heartbeat interval
+      expect(setInterval).toHaveBeenCalledTimes(1)
       expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 2000)
-      expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 5000)
     })
   })
 
