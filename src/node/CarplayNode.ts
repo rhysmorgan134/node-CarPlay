@@ -46,6 +46,7 @@ export default class CarplayNode {
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
         this.clearPairTimeout()
+        this.clearFrameInterval()
         const phoneTypeConfg = this._config.phoneConfig[message.phoneType]
         if (phoneTypeConfg?.frameInterval) {
           this._frameInterval = setInterval(
@@ -153,10 +154,8 @@ export default class CarplayNode {
 
   stop = async () => {
     try {
-      if (this._frameInterval) {
-        clearInterval(this._frameInterval)
-        this._frameInterval = null
-      }
+      this.clearPairTimeout()
+      this.clearFrameInterval()
       await this.dongleDriver.close()
     } catch (err) {
       console.error(err)
@@ -166,6 +165,13 @@ export default class CarplayNode {
   private clearPairTimeout() {
     if (this._pairTimeout) {
       clearTimeout(this._pairTimeout)
+      this._pairTimeout = null
+    }
+  }
+
+  private clearFrameInterval() {
+    if (this._frameInterval) {
+      clearInterval(this._frameInterval)
       this._pairTimeout = null
     }
   }

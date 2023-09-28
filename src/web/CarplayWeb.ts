@@ -67,6 +67,7 @@ export default class CarplayWeb {
     driver.on('message', (message: Message) => {
       if (message instanceof Plugged) {
         this.clearPairTimeout()
+        this.clearFrameInterval()
 
         const phoneTypeConfg = this._config.phoneConfig[message.phoneType]
         if (phoneTypeConfg?.frameInterval) {
@@ -107,6 +108,13 @@ export default class CarplayWeb {
     }
   }
 
+  private clearFrameInterval() {
+    if (this._frameInterval) {
+      clearInterval(this._frameInterval)
+      this._pairTimeout = null
+    }
+  }
+
   public onmessage: ((ev: CarplayMessage) => void) | null = null
 
   start = async (usbDevice: USBDevice) => {
@@ -128,10 +136,8 @@ export default class CarplayWeb {
 
   stop = async () => {
     try {
-      if (this._frameInterval) {
-        clearInterval(this._frameInterval)
-        this._frameInterval = null
-      }
+      this.clearFrameInterval()
+      this.clearPairTimeout()
       await this.dongleDriver.close()
     } catch (err) {
       console.error(err)
