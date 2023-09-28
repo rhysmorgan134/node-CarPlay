@@ -14,8 +14,8 @@ npm i
 npm start
 ```
 
-The included client handles video and touch inputs. If you would like to access the raw video feed, it is available at
-`http://localhost:3000/stream/video`
+You may open `http://localhost:3000` in the browser of your choice (not just Chrome). The included client handles video and touch inputs.
+If you would like to access the raw video feed, it is available at `http://localhost:3000/stream/video`
 
 On Raspberry Pi make sure to also grant plugdev permissions to usb devices
 ```
