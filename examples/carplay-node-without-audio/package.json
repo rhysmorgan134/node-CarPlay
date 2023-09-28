@@ -25,8 +25,8 @@
   },
   "scripts": {
     "build": "npm run build:server && npm run build:client",
-    "build:server": "esbuild server/index.ts --bundle --outfile=server/index.js --define:process.env.NODE_ENV=\\\"production\\\" --platform=node --external:usb --external:node-microphone --external:ws --external:express --external:cors",
-    "build:client": "esbuild client/index.tsx --bundle --outfile=public/bundle.js --define:process.env.NODE_ENV=\\\"production\\\" --alias:events=events --alias:stream=stream-browserify --alias:buffer=buffer",
+    "build:server": "esbuild server/index.ts --bundle --outfile=server/index.js --define:process.env.NODE_ENV=\\\"production\\\" --platform=node --external:usb --external:node-microphone --external:ws --external:express --external:cors --tree-shaking=true",
+    "build:client": "esbuild client/index.tsx --bundle --outfile=public/bundle.js --define:process.env.NODE_ENV=\\\"production\\\" --alias:events=events --alias:stream=stream-browserify --alias:buffer=buffer --tree-shaking=true",
     "watch:server": "npm run build:client -- --watch",
     "watch:client": "npm run build:client -- --watch",
     "start": "node server/index.js",

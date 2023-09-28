@@ -1,6 +1,7 @@
 # Running this example
 
 **Note:** This example does not have audio processing, and relies on a separate bluetooth audio output device (optional) for audio.
+If there's no audio dongle connected, audio will play from iPhone itself.
 
 In the root folder of node-CarPlay run:
 ```
