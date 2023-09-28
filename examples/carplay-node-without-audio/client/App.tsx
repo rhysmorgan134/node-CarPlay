@@ -4,10 +4,24 @@ import { TouchAction } from 'node-carplay/web'
 
 import { config } from './config.js'
 
+const RETRY_DELAY_MS = 6000
+// ^ Note: This retry delay is lower than carplay-web-app
+// because the dongle is handled on server side, and it is
+// higher than 5 seconds because that's the default "frame"
+// time.
+
 function App() {
   const [pointerdown, setPointerDown] = useState(false)
 
   const connectionRef = useRef<WebSocket | null>(null)
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const clearRetryTimeout = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current)
+      retryTimeoutRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     if (connectionRef.current) {
@@ -39,10 +53,17 @@ function App() {
             video: value,
             duration: 0,
           })
+          clearRetryTimeout()
         }
       })
       .catch(err => {
         console.error('Error in video stream', err)
+        if (retryTimeoutRef.current == null) {
+          console.error(`Reloading page in ${RETRY_DELAY_MS}ms`)
+          retryTimeoutRef.current = setTimeout(() => {
+            window.location.reload()
+          }, RETRY_DELAY_MS)
+        }
       })
   }, [])
 
