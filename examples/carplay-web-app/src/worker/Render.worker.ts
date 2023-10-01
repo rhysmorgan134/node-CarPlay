@@ -131,8 +131,9 @@ export class RenderWorker {
   }
 
   onFrame(event: RenderEvent) {
+    const typedArray = new Uint8Array(event.frameData)
     // the decoder, as it is configured, expects 'annexB' style h264 data.
-    const frame = this.getAnnexBFrame(new Uint8Array(event.frameData))
+    const frame = this.getAnnexBFrame(typedArray)
     if (this.decoder.state === 'unconfigured') {
       const decoderConfig = this.getDecoderConfig(frame)
       if (decoderConfig) {
@@ -140,9 +141,7 @@ export class RenderWorker {
       }
     }
     if (this.decoder.state === 'configured') {
-      const keyframe = this.isKeyFrame(new Uint8Array(event.frameData))
-        ? 'key'
-        : 'delta'
+      const keyframe = this.isKeyFrame(typedArray) ? 'key' : 'delta'
 
       try {
         this.decoder.decode(
