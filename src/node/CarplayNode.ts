@@ -18,8 +18,7 @@ import {
   AudioCommand,
 } from '../modules/index.js'
 
-const USB_WAIT_PERIOD_MS = 500
-const USB_WAIT_RESTART_MS = 3000
+const USB_WAIT_PERIOD_MS = 3000
 
 export type CarplayMessage =
   | { type: 'plugged'; message?: undefined }
@@ -124,7 +123,7 @@ export default class CarplayNode {
     // or LIBUSB_TRANSFER_ERROR
 
     console.log('Reset device, finding again...')
-    await new Promise(resolve => setTimeout(resolve, USB_WAIT_RESTART_MS))
+    await new Promise(resolve => setTimeout(resolve, USB_WAIT_PERIOD_MS))
     // ^ Device disappears after reset for 1-3 seconds
 
     device = await this.findDevice()
