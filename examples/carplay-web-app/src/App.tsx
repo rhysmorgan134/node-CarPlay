@@ -41,7 +41,6 @@ function App() {
     null,
   )
 
-  // Create webworker and subscribe to 'message' event.
   const renderWorker = useMemo(() => {
     if (canvasElement) {
       const worker = new Worker(
