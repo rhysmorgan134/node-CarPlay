@@ -4,9 +4,6 @@
     Carplay dongle driver for Node.js & Browser
 </p>
 
-<a href="https://www.buymeacoffee.com/rhysm" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
-
-
 <!-- TABLE OF CONTENTS -->
 <details open="open">
   <summary>Table of Contents</summary>
@@ -27,7 +24,6 @@
     <li><a href="#usage">Usage</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
   </ol>
 </details>
 
@@ -97,8 +93,3 @@ Contributions are what make the open source community such an amazing place to b
 
 The contents of this repository are licensed under the terms of the MIT License.
 See the `LICENSE` file for more info.
-
-
-## Contact
-
-Rhys Morgan - rhysm134@gmail.com
