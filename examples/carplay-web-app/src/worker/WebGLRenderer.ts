@@ -1,5 +1,5 @@
 // Based on https://github.com/w3c/webcodecs/blob/main/samples/video-decode-display/renderer_webgl.js
-// License: https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
+// License: https://www.w3.org/copyright/software-license-2023/
 
 export class WebGLRenderer {
   #canvas: OffscreenCanvas | null = null
