@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { RotatingLines } from 'react-loader-spinner'
 import './App.css'
 import {
@@ -29,29 +36,33 @@ function App() {
   const [receivingVideo, setReceivingVideo] = useState(false)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(
+    null,
+  )
 
-    // Create webworker and subscribe to 'message' event.
-    const renderWorker = useMemo(() => {
-      if (canvasElement) {
-        const worker = new Worker(
-          new URL('./worker/Render.worker.ts', import.meta.url),
-        );
-        const canvas = canvasElement;
-        const offscreenCanvas: OffscreenCanvas = canvas.transferControlToOffscreen();
-        worker.postMessage(new InitRenderEvent(offscreenCanvas), [offscreenCanvas]);
-        return worker;
-      }
-      return undefined;
-    }, [canvasElement]);
+  // Create webworker and subscribe to 'message' event.
+  const renderWorker = useMemo(() => {
+    if (canvasElement) {
+      const worker = new Worker(
+        new URL('./worker/Render.worker.ts', import.meta.url),
+      )
+      const canvas = canvasElement
+      const offscreenCanvas: OffscreenCanvas =
+        canvas.transferControlToOffscreen()
+      worker.postMessage(new InitRenderEvent(offscreenCanvas), [
+        offscreenCanvas,
+      ])
+      return worker
+    }
+    return undefined
+  }, [canvasElement])
 
-    useLayoutEffect(() => {
-      if (canvasRef.current) {
-        setCanvasElement(canvasRef.current);
-      }
-    }, []);
-
+  useLayoutEffect(() => {
+    if (canvasRef.current) {
+      setCanvasElement(canvasRef.current)
+    }
+  }, [])
 
   const carplayWorker = useMemo(
     () =>
@@ -84,12 +95,14 @@ function App() {
           break
         case 'video':
           // if document is hidden we dont need to feed frames
-          if(!renderWorker || document.hidden) return
+          if (!renderWorker || document.hidden) return
           if (!receivingVideo) setReceivingVideo(true)
           clearRetryTimeout()
 
           const { message: video } = ev.data
-          renderWorker.postMessage(new RenderEvent(video.data), [video.data.buffer]);
+          renderWorker.postMessage(new RenderEvent(video.data), [
+            video.data.buffer,
+          ])
 
           break
         case 'audio':
@@ -126,7 +139,15 @@ function App() {
           break
       }
     }
-  }, [carplayWorker, clearRetryTimeout, processAudio, receivingVideo, renderWorker, startRecording, stopRecording])
+  }, [
+    carplayWorker,
+    clearRetryTimeout,
+    processAudio,
+    receivingVideo,
+    renderWorker,
+    startRecording,
+    stopRecording,
+  ])
 
   const checkDevice = useCallback(
     async (request: boolean = false) => {

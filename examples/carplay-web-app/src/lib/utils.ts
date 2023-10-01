@@ -30,7 +30,7 @@ function getNalus(buffer: Uint8Array): GetNaluResult {
       const bitstream = new Bitstream(nalu?.nalu)
       bitstream.seek(3)
       const nal_unit_type = bitstream.u(5)
-      if (nal_unit_type != undefined) {
+      if (nal_unit_type !== undefined) {
         result.push({ type: nal_unit_type, nalu })
       }
     }
