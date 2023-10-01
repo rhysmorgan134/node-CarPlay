@@ -1,4 +1,4 @@
-export * from './messages.js'
+export * from './messages/index.js'
 export {
   HandDriveType,
   DongleConfig,

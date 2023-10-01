@@ -1,3 +1,4 @@
+import { MessageHeader, MessageType, CommandMapping } from '../common.js'
 import {
   AudioCommand,
   AudioData,
@@ -6,86 +7,13 @@ import {
   BluetoothPIN,
   BluetoothPairedList,
   Command,
-  HeaderBuildError,
   HiCarLink,
-  CommandMapping,
   ManufacturerInfo,
-  MessageHeader,
-  MessageType,
   Plugged,
-  SendCommand,
-  SendTouch,
   SoftwareVersion,
-  TouchAction,
-  Unplugged,
   VideoData,
   WifiDeviceName,
-} from '../messages.js'
-
-describe('MessageHeader', () => {
-  describe('constructor', () => {
-    it('Constructs instance with type and length', () => {
-      const header = new MessageHeader(10, MessageType.Command)
-      expect(header.type).toBe(MessageType.Command)
-      expect(header.length).toBe(10)
-    })
-  })
-
-  describe('fromBuffer', () => {
-    it('Constructs instance with type and length', () => {
-      const buffer = Buffer.alloc(16)
-      buffer.writeUInt32LE(MessageHeader.magic, 0)
-      buffer.writeUInt32LE(10, 4)
-      buffer.writeUInt32LE(MessageType.Command, 8)
-      buffer.writeUInt32LE(((MessageType.Command ^ -1) & 0xffffffff) >>> 0, 12)
-      const header = MessageHeader.fromBuffer(buffer)
-      expect(header.type).toBe(MessageType.Command)
-      expect(header.length).toBe(10)
-    })
-
-    it('throws if buffer length is wrong', () => {
-      const buffer = Buffer.alloc(10)
-      expect(() => MessageHeader.fromBuffer(buffer)).toThrow(
-        new HeaderBuildError('Invalid buffer size - Expecting 16, got 10'),
-      )
-    })
-
-    it('throws if magic number check fails', () => {
-      const buffer = Buffer.alloc(16)
-      buffer.writeUInt32LE(12345, 0)
-      expect(() => MessageHeader.fromBuffer(buffer)).toThrow(
-        new HeaderBuildError('Invalid magic number, received 12345'),
-      )
-    })
-
-    it('throws if type check fails', () => {
-      const buffer = Buffer.alloc(16)
-      buffer.writeUInt32LE(MessageHeader.magic, 0)
-      buffer.writeUInt32LE(10, 4)
-      buffer.writeUInt32LE(MessageType.Command, 8)
-      buffer.writeUInt32LE(12345, 12)
-      expect(() => MessageHeader.fromBuffer(buffer)).toThrow(
-        new HeaderBuildError('Invalid type check, received 12345'),
-      )
-    })
-  })
-
-  describe('toMessage', () => {
-    it('constructs message based on type with no data', () => {
-      const header = new MessageHeader(0, MessageType.Unplugged)
-      expect(header.toMessage() instanceof Unplugged).toBeTruthy()
-    })
-
-    it('constructs message based on type with data', () => {
-      const header = new MessageHeader(4, MessageType.Command)
-      const data = Buffer.alloc(4)
-      data.writeUInt32LE(CommandMapping.siri, 0)
-      const message = header.toMessage(data)
-      expect(message instanceof Command).toBeTruthy()
-      expect((message as Command).value).toBe(CommandMapping.siri)
-    })
-  })
-})
+} from '../readable.js'
 
 describe('Readable Messages', () => {
   describe('Command Message', () => {
@@ -284,56 +212,6 @@ describe('Readable Messages', () => {
       expect((message as VideoData).length).toBe(10)
       expect((message as VideoData).unknown).toBe(2)
       expect((message as VideoData).data).toStrictEqual(data.subarray(20))
-    })
-  })
-})
-
-describe('Sendable Messages', () => {
-  describe('SendTouch Message', () => {
-    it('constructs message with correct values', () => {
-      const message = new SendTouch(0.1, 0.2, TouchAction.Up)
-      expect(message.x).toBe(0.1)
-      expect(message.y).toBe(0.2)
-      expect(message.action).toBe(TouchAction.Up)
-    })
-
-    it('serialises message data correctly', () => {
-      const expectedData = Buffer.alloc(16)
-      expectedData.writeUInt32LE(TouchAction.Up, 0)
-      expectedData.writeUInt32LE(0.1 * 10000, 4)
-      expectedData.writeUInt32LE(0.2 * 10000, 8)
-      const message = new SendTouch(0.1, 0.2, TouchAction.Up)
-
-      const [, data] = message.serialise()
-      expect(data).toStrictEqual(expectedData)
-    })
-
-    it('serialises message with clamped values (0-10000)', () => {
-      const expectedData = Buffer.alloc(16)
-      expectedData.writeUInt32LE(TouchAction.Up, 0)
-      expectedData.writeUInt32LE(0, 4)
-      expectedData.writeUInt32LE(10000, 8)
-      const message = new SendTouch(-0.5, 2, TouchAction.Up)
-
-      const [, data] = message.serialise()
-      expect(data).toStrictEqual(expectedData)
-    })
-  })
-
-  describe('Command Message', () => {
-    it('constructs message with correct values', () => {
-      const message = new SendCommand('siri')
-      expect(message.value).toBe(CommandMapping.siri)
-    })
-
-    it('serialises message data correctly', () => {
-      const expectedData = Buffer.alloc(4)
-      expectedData.writeUInt32LE(CommandMapping.siri, 0)
-
-      const message = new SendCommand('siri')
-
-      const [, data] = message.serialise()
-      expect(data).toStrictEqual(expectedData)
     })
   })
 })

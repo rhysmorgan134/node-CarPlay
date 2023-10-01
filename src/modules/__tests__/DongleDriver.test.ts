@@ -14,7 +14,7 @@ import {
   SendOpen,
   SendString,
   SendableMessage,
-} from '../messages.js'
+} from '../messages/index.js'
 import {
   usbDeviceFactory,
   deviceConfig,
@@ -23,10 +23,7 @@ import {
 } from './mocks/usbMocks.js'
 
 const expectMessageSent = (device: USBDevice, message: SendableMessage) => {
-  expect(device.transferOut).toHaveBeenCalledWith(
-    1,
-    Buffer.concat(message.serialise()),
-  )
+  expect(device.transferOut).toHaveBeenCalledWith(1, message.serialise())
 }
 
 describe('DongleDriver', () => {
@@ -232,10 +229,7 @@ describe('DongleDriver', () => {
       const res = await driver.send(message)
       expect(res).toBeTruthy()
       expect(device.transferOut).toHaveBeenCalledTimes(1)
-      expect(device.transferOut).toBeCalledWith(
-        1,
-        Buffer.concat(message.serialise()),
-      )
+      expect(device.transferOut).toBeCalledWith(1, message.serialise())
     })
 
     it('returns false and if transferOut indicates failure', async () => {
@@ -255,10 +249,7 @@ describe('DongleDriver', () => {
       const res = await driver.send(message)
       expect(res).toBeFalsy()
       expect(device.transferOut).toHaveBeenCalledTimes(1)
-      expect(device.transferOut).toBeCalledWith(
-        1,
-        Buffer.concat(message.serialise()),
-      )
+      expect(device.transferOut).toBeCalledWith(1, message.serialise())
     })
   })
 

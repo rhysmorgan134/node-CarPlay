@@ -70,6 +70,7 @@ function App() {
             video: video.data,
             duration: 0,
           })
+
           break
         case 'audio':
           clearRetryTimeout()

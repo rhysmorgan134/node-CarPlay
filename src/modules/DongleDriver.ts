@@ -1,18 +1,17 @@
-import {
-  MessageHeader,
-  HeaderBuildError,
-  SendableMessage,
-  HeartBeat,
-  SendCommand,
-  SendString,
-  FileAddress,
-  SendBoolean,
-  SendNumber,
-  SendOpen,
-  SendBoxSettings,
-  PhoneType,
-} from './messages.js'
 import EventEmitter from 'events'
+import { MessageHeader, HeaderBuildError } from './messages/common.js'
+import { PhoneType } from './messages/readable.js'
+import {
+  SendableMessage,
+  SendNumber,
+  FileAddress,
+  SendOpen,
+  SendBoolean,
+  SendString,
+  SendBoxSettings,
+  SendCommand,
+  HeartBeat,
+} from './messages/sendable.js'
 
 const CONFIG_NUMBER = 1
 const MAX_ERROR_COUNT = 5
@@ -149,8 +148,7 @@ export class DongleDriver extends EventEmitter {
     }
 
     try {
-      const [header, content] = message.serialise()
-      const payload = Buffer.concat([header, content])
+      const payload = message.serialise()
       const transferResult = await this._device?.transferOut(
         this._outEP!.endpointNumber,
         payload,

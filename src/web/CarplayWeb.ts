@@ -7,8 +7,10 @@ import {
   MediaData,
   SendCommand,
   Command,
-} from '../modules/messages.js'
-import { DongleDriver, DongleConfig, DEFAULT_CONFIG } from '../modules/index.js'
+  DongleDriver,
+  DongleConfig,
+  DEFAULT_CONFIG,
+} from '../modules/index.js'
 
 const { knownDevices } = DongleDriver
 
@@ -44,7 +46,6 @@ export const findDevice = async (): Promise<USBDevice | null> => {
 export const requestDevice = async (): Promise<USBDevice | null> => {
   try {
     const { knownDevices } = DongleDriver
-
     const device = await navigator.usb.requestDevice({
       filters: knownDevices,
     })
@@ -78,7 +79,6 @@ export default class CarplayWeb {
             phoneTypeConfg?.frameInterval,
           )
         }
-
         this.onmessage?.({ type: 'plugged' })
       } else if (message instanceof Unplugged) {
         this.onmessage?.({ type: 'unplugged' })
