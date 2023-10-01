@@ -17,6 +17,7 @@ const config = async () => {
   if (!device) {
     console.log('No device found - Connect dongle to USB and try again')
   } else {
+    await device.open()
     await driver.initialise(device)
 
     const iconLabel = process.argv[2]
