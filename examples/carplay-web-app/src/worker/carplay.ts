@@ -2,6 +2,7 @@ import CarplayWeb, {
   CarplayMessage,
   DongleConfig,
   SendAudio,
+  SendCommand,
   SendTouch,
   findDevice,
 } from 'node-carplay/web'
@@ -47,6 +48,12 @@ onmessage = async (event: MessageEvent<Command>) => {
     case 'microphoneInput':
       if (carplayWeb) {
         const data = new SendAudio(event.data.payload)
+        carplayWeb.dongleDriver.send(data)
+      }
+      break
+    case 'frame':
+      if (carplayWeb) {
+        const data = new SendCommand('frame')
         carplayWeb.dongleDriver.send(data)
       }
       break
