@@ -1,7 +1,5 @@
 // Based on https://github.com/OllieJones/h264-interp-utils
-// No License given.
-
-/* eslint-disable */
+// MIT License
 
 function byte2hex(val: number) {
   return ('00' + val.toString(16)).slice(-2)
