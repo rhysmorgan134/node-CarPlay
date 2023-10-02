@@ -46,12 +46,8 @@ function App() {
       const worker = new Worker(
         new URL('./worker/render/Render.worker.ts', import.meta.url),
       )
-      const canvas = canvasElement
-      const offscreenCanvas: OffscreenCanvas =
-        canvas.transferControlToOffscreen()
-      worker.postMessage(new InitEvent(offscreenCanvas), [
-        offscreenCanvas,
-      ])
+      const canvas = canvasElement.transferControlToOffscreen()
+      worker.postMessage(new InitEvent(canvas), [canvas])
       return worker
     }
     return undefined
