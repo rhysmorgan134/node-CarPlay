@@ -20,7 +20,7 @@ export type StatusType = 'render' | 'decode'
 type PartialRecord<K extends string, T> = Partial<Record<K, T>>
 export type StatusUpdate = PartialRecord<StatusType, string>
 
-export interface Renderer {
+export interface FrameRenderer {
   draw(data: VideoFrame): void
 }
 
@@ -32,7 +32,7 @@ type HostType = Window & typeof globalThis
 export class RenderWorker {
   constructor(private host: HostType) {}
 
-  private renderer: Renderer | null = null
+  private renderer: FrameRenderer | null = null
   private pendingFrame: VideoFrame | null = null
   private startTime: number | null = null
   private frameCount = 0
