@@ -1,7 +1,9 @@
 // Based on https://github.com/w3c/webcodecs/blob/main/samples/video-decode-display/renderer_webgl.js
 // License: https://www.w3.org/copyright/software-license-2023/
 
-export class WebGLRenderer {
+import { Renderer } from './Render.worker'
+
+export class WebGLRenderer implements Renderer {
   #canvas: OffscreenCanvas | null = null
   #ctx: WebGLRenderingContext | null = null
 

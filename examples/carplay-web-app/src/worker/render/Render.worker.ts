@@ -1,12 +1,12 @@
 // Based on https://github.com/codewithpassion/foxglove-studio-h264-extension/tree/main
 // MIT License
-import { NALUStream, SPS } from '../lib/h264-utils'
+import { NALUStream, SPS } from './lib/h264-utils'
 import {
   getNalus,
   identifyNaluStreamInfo,
   NaluStreamInfo,
   NaluTypes,
-} from '../lib/utils'
+} from './lib/utils'
 import {
   InitRenderEvent,
   RenderDomeEvent as RenderDoneEvent,
@@ -20,6 +20,10 @@ export type StatusType = 'render' | 'decode'
 type PartialRecord<K extends string, T> = Partial<Record<K, T>>
 export type StatusUpdate = PartialRecord<StatusType, string>
 
+export interface Renderer {
+  draw(data: VideoFrame): void
+}
+
 // eslint-disable-next-line no-restricted-globals
 const scope = self as unknown as Worker
 
@@ -28,7 +32,7 @@ type HostType = Window & typeof globalThis
 export class RenderWorker {
   constructor(private host: HostType) {}
 
-  private renderer: { draw(data: VideoFrame): void } | null = null
+  private renderer: Renderer | null = null
   private pendingFrame: VideoFrame | null = null
   private startTime: number | null = null
   private frameCount = 0
@@ -107,9 +111,7 @@ export class RenderWorker {
     return this.naluStreamInfo
   }
 
-  // Set up a VideoDecoer.
   private decoder = new VideoDecoder({
-    // We got a frame
     output: this.onVideoDecoderOutput,
     error: this.onVideoDecoderOutputError,
   })
@@ -152,7 +154,7 @@ export class RenderWorker {
           }),
         )
       } catch (e) {
-        console.error(`H264 Render Workerd ecode error`, e)
+        console.error(`H264 Render Worker decode error`, e)
       }
     }
   }
@@ -166,6 +168,7 @@ export class RenderWorker {
         codec: sps.MIME,
         codedHeight: sps.picHeight,
         codedWidth: sps.picWidth,
+        hardwareAcceleration: 'prefer-hardware',
       }
       return decoderConfig
     }
@@ -178,7 +181,6 @@ export class RenderWorker {
   }
 }
 
-// Create a worker instance and subscribe to message event from the host.
 // eslint-disable-next-line no-restricted-globals
 const worker = new RenderWorker(self)
 scope.addEventListener('message', (event: MessageEvent<WorkerEvent>) => {

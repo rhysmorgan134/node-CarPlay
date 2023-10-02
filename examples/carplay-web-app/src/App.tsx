@@ -17,7 +17,7 @@ import {
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
 import { useCarplayTouch } from './useCarplayTouch'
-import { InitRenderEvent, RenderEvent } from './worker/RenderEvents'
+import { InitRenderEvent, RenderEvent } from './worker/render/RenderEvents'
 
 const width = window.innerWidth
 const height = window.innerHeight
@@ -44,7 +44,7 @@ function App() {
   const renderWorker = useMemo(() => {
     if (canvasElement) {
       const worker = new Worker(
-        new URL('./worker/Render.worker.ts', import.meta.url),
+        new URL('./worker/render/Render.worker.ts', import.meta.url),
       )
       const canvas = canvasElement
       const offscreenCanvas: OffscreenCanvas =
