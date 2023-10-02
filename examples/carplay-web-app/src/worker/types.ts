@@ -3,6 +3,7 @@ import { DongleConfig, TouchAction, CarplayMessage } from 'node-carplay/web'
 export type CarplayWorkerMessage = { data: CarplayMessage }
 
 export type Command =
+  | { type: 'frame' }
   | { type: 'stop' }
   | { type: 'start'; payload: Partial<DongleConfig> }
   | { type: 'touch'; payload: { x: number; y: number; action: TouchAction } }

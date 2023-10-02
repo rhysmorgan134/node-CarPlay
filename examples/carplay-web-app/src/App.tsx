@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { RotatingLines } from 'react-loader-spinner'
 import './App.css'
 import {
@@ -7,10 +14,10 @@ import {
   DongleConfig,
   CommandMapping,
 } from 'node-carplay/web'
-import JMuxer from 'jmuxer'
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
 import { useCarplayTouch } from './useCarplayTouch'
+import { InitEvent, RenderEvent } from './worker/render/RenderEvents'
 
 const width = window.innerWidth
 const height = window.innerHeight
@@ -27,13 +34,34 @@ function App() {
   const [isPlugged, setPlugged] = useState(false)
   const [deviceFound, setDeviceFound] = useState<Boolean | null>(null)
   const [receivingVideo, setReceivingVideo] = useState(false)
-  const [jmuxer, setJmuxer] = useState<JMuxer | null>(null)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(
+    null,
+  )
+
+  const renderWorker = useMemo(() => {
+    if (!canvasElement) return
+
+    const worker = new Worker(
+      new URL('./worker/render/Render.worker.ts', import.meta.url),
+    )
+    const canvas = canvasElement.transferControlToOffscreen()
+    worker.postMessage(new InitEvent(canvas), [canvas])
+    return worker
+  }, [canvasElement])
+
+  useLayoutEffect(() => {
+    if (canvasRef.current) {
+      setCanvasElement(canvasRef.current)
+    }
+  }, [])
 
   const carplayWorker = useMemo(
     () =>
       new Worker(
-        new URL('./worker/carplay.ts', import.meta.url),
+        new URL('./worker/CarPlay.worker.ts', import.meta.url),
       ) as CarPlayWorker,
     [],
   )
@@ -61,15 +89,14 @@ function App() {
           break
         case 'video':
           // if document is hidden we dont need to feed frames
-          if (!jmuxer || document.hidden) return
+          if (!renderWorker || document.hidden) return
           if (!receivingVideo) setReceivingVideo(true)
           clearRetryTimeout()
 
           const { message: video } = ev.data
-          jmuxer.feed({
-            video: video.data,
-            duration: 0,
-          })
+          renderWorker.postMessage(new RenderEvent(video.data), [
+            video.data.buffer,
+          ])
 
           break
         case 'audio':
@@ -109,27 +136,12 @@ function App() {
   }, [
     carplayWorker,
     clearRetryTimeout,
-    jmuxer,
     processAudio,
     receivingVideo,
+    renderWorker,
     startRecording,
     stopRecording,
   ])
-
-  // video init
-  useEffect(() => {
-    const jmuxer = new JMuxer({
-      node: 'video',
-      mode: 'video',
-      fps: config.fps,
-      flushingTime: 0,
-      debug: false,
-    })
-    setJmuxer(jmuxer)
-    return () => {
-      jmuxer.destroy()
-    }
-  }, [])
 
   const checkDevice = useCallback(
     async (request: boolean = false) => {
@@ -217,11 +229,10 @@ function App() {
           display: 'flex',
         }}
       >
-        <video
+        <canvas
+          ref={canvasRef}
           id="video"
           style={isPlugged ? { height: '100%' } : { display: 'none' }}
-          autoPlay
-          muted
         />
       </div>
     </div>
