@@ -37,17 +37,17 @@ export class RenderWorker {
   private pendingStatus: StatusUpdate | null = null
   private naluStreamInfo: NaluStreamInfo | null = null
 
-  private setStatus(type: StatusType, message: string) {
+  private setStatus = (type: StatusType, message: string) => {
     if (this.pendingStatus) {
       this.pendingStatus[type] = message
     } else {
       this.pendingStatus = { [type]: message }
 
-      this.host.requestAnimationFrame(this.statusAnimationFrame.bind(this))
+      this.host.requestAnimationFrame(this.statusAnimationFrame)
     }
   }
 
-  private statusAnimationFrame() {
+  private statusAnimationFrame = () => {
     if (this.pendingStatus) {
       this.host.postMessage(new StatusEvent(this.pendingStatus))
     }
@@ -56,7 +56,7 @@ export class RenderWorker {
     this.host.postMessage(new RenderDoneEvent())
   }
 
-  private onVideoDecoderOutput(frame: VideoFrame) {
+  private onVideoDecoderOutput = (frame: VideoFrame) => {
     // Update statistics.
     if (this.startTime == null) {
       this.startTime = performance.now()
@@ -70,10 +70,10 @@ export class RenderWorker {
     this.renderFrame(frame)
   }
 
-  private renderFrame(frame: VideoFrame) {
+  private renderFrame = (frame: VideoFrame) => {
     if (!this.pendingFrame) {
       // Schedule rendering in the next animation frame.
-      requestAnimationFrame(this.renderAnimationFrame.bind(this))
+      requestAnimationFrame(this.renderAnimationFrame)
     } else {
       // Close the current pending frame before replacing it.
       this.pendingFrame.close()
@@ -82,19 +82,19 @@ export class RenderWorker {
     this.pendingFrame = frame
   }
 
-  private renderAnimationFrame() {
+  private renderAnimationFrame = () => {
     if (this.pendingFrame) {
       this.renderer?.draw(this.pendingFrame)
       this.pendingFrame = null
     }
   }
 
-  private onVideoDecoderOutputError(err: Error) {
+  private onVideoDecoderOutputError = (err: Error) => {
     this.setStatus('decode', err.message)
     console.error(`H264 Render worker decoder error`, err)
   }
 
-  private getNaluStreamInfo(imgData: Uint8Array) {
+  private getNaluStreamInfo = (imgData: Uint8Array) => {
     if (this.naluStreamInfo === undefined) {
       const streamInfo = identifyNaluStreamInfo(imgData)
       if (streamInfo.type !== 'unknown') {
@@ -110,8 +110,8 @@ export class RenderWorker {
   // Set up a VideoDecoer.
   private decoder = new VideoDecoder({
     // We got a frame
-    output: this.onVideoDecoderOutput.bind(this),
-    error: this.onVideoDecoderOutputError.bind(this),
+    output: this.onVideoDecoderOutput,
+    error: this.onVideoDecoderOutputError,
   })
 
   private getAnnexBFrame(frameData: Uint8Array) {
@@ -126,11 +126,11 @@ export class RenderWorker {
     return frameData
   }
 
-  init(event: InitRenderEvent) {
+  init = (event: InitRenderEvent) => {
     this.renderer = new WebGLRenderer('webgl', event.canvas)
   }
 
-  onFrame(event: RenderEvent) {
+  onFrame = (event: RenderEvent) => {
     const typedArray = new Uint8Array(event.frameData)
     // the decoder, as it is configured, expects 'annexB' style h264 data.
     const frame = this.getAnnexBFrame(typedArray)
