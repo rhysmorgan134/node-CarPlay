@@ -1,3 +1,5 @@
+// Based on https://github.com/codewithpassion/foxglove-studio-h264-extension/tree/main
+// MIT License
 import { Bitstream, NALUStream, StreamType } from './h264-utils'
 
 export type NaluStreamType = StreamType

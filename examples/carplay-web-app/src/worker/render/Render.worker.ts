@@ -7,18 +7,8 @@ import {
   NaluStreamInfo,
   NaluTypes,
 } from './lib/utils'
-import {
-  InitRenderEvent,
-  RenderDomeEvent as RenderDoneEvent,
-  RenderEvent,
-  StatusEvent,
-  WorkerEvent,
-} from './RenderEvents'
+import { InitEvent, RenderEvent, WorkerEvent } from './RenderEvents'
 import { WebGLRenderer } from './WebGLRenderer'
-
-export type StatusType = 'render' | 'decode'
-type PartialRecord<K extends string, T> = Partial<Record<K, T>>
-export type StatusUpdate = PartialRecord<StatusType, string>
 
 export interface FrameRenderer {
   draw(data: VideoFrame): void
@@ -37,28 +27,9 @@ export class RenderWorker {
   private startTime: number | null = null
   private frameCount = 0
   private timestamp = 0
+  private fps = 0
 
-  private pendingStatus: StatusUpdate | null = null
   private naluStreamInfo: NaluStreamInfo | null = null
-
-  private setStatus = (type: StatusType, message: string) => {
-    if (this.pendingStatus) {
-      this.pendingStatus[type] = message
-    } else {
-      this.pendingStatus = { [type]: message }
-
-      this.host.requestAnimationFrame(this.statusAnimationFrame)
-    }
-  }
-
-  private statusAnimationFrame = () => {
-    if (this.pendingStatus) {
-      this.host.postMessage(new StatusEvent(this.pendingStatus))
-    }
-
-    this.pendingStatus = null
-    this.host.postMessage(new RenderDoneEvent())
-  }
 
   private onVideoDecoderOutput = (frame: VideoFrame) => {
     // Update statistics.
@@ -66,8 +37,7 @@ export class RenderWorker {
       this.startTime = performance.now()
     } else {
       const elapsed = (performance.now() - this.startTime) / 1000
-      const fps = ++this.frameCount / elapsed
-      this.setStatus('render', `${fps.toFixed(0)}`)
+      this.fps = ++this.frameCount / elapsed
     }
 
     // Schedule the frame to be rendered.
@@ -94,7 +64,6 @@ export class RenderWorker {
   }
 
   private onVideoDecoderOutputError = (err: Error) => {
-    this.setStatus('decode', err.message)
     console.error(`H264 Render worker decoder error`, err)
   }
 
@@ -128,7 +97,7 @@ export class RenderWorker {
     return frameData
   }
 
-  init = (event: InitRenderEvent) => {
+  init = (event: InitEvent) => {
     this.renderer = new WebGLRenderer('webgl', event.canvas)
   }
 
@@ -185,7 +154,7 @@ export class RenderWorker {
 const worker = new RenderWorker(self)
 scope.addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
   if (event.data.type === 'init') {
-    worker.init(event.data as InitRenderEvent)
+    worker.init(event.data as InitEvent)
   } else if (event.data.type === 'frame') {
     worker.onFrame(event.data as RenderEvent)
   }

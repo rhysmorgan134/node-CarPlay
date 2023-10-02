@@ -17,7 +17,7 @@ import {
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
 import { useCarplayTouch } from './useCarplayTouch'
-import { InitRenderEvent, RenderEvent } from './worker/render/RenderEvents'
+import { InitEvent, RenderEvent } from './worker/render/RenderEvents'
 
 const width = window.innerWidth
 const height = window.innerHeight
@@ -49,7 +49,7 @@ function App() {
       const canvas = canvasElement
       const offscreenCanvas: OffscreenCanvas =
         canvas.transferControlToOffscreen()
-      worker.postMessage(new InitRenderEvent(offscreenCanvas), [
+      worker.postMessage(new InitEvent(offscreenCanvas), [
         offscreenCanvas,
       ])
       return worker
