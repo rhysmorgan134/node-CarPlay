@@ -42,15 +42,14 @@ function App() {
   )
 
   const renderWorker = useMemo(() => {
-    if (canvasElement) {
-      const worker = new Worker(
-        new URL('./worker/render/Render.worker.ts', import.meta.url),
-      )
-      const canvas = canvasElement.transferControlToOffscreen()
-      worker.postMessage(new InitEvent(canvas), [canvas])
-      return worker
-    }
-    return undefined
+    if (!canvasElement) return
+
+    const worker = new Worker(
+      new URL('./worker/render/Render.worker.ts', import.meta.url),
+    )
+    const canvas = canvasElement.transferControlToOffscreen()
+    worker.postMessage(new InitEvent(canvas), [canvas])
+    return worker
   }, [canvasElement])
 
   useLayoutEffect(() => {
