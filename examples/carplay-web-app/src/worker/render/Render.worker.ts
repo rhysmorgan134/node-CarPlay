@@ -1,7 +1,6 @@
 // Based on https://github.com/codewithpassion/foxglove-studio-h264-extension/tree/main
 // MIT License
-import { SPS } from './lib/h264-utils'
-import { getNalus, isKeyFrame, NaluTypes } from './lib/utils'
+import { getDecoderConfig, isKeyFrame } from './lib/utils'
 import { InitEvent, RenderEvent, WorkerEvent } from './RenderEvents'
 import { WebGLRenderer } from './WebGLRenderer'
 
@@ -73,7 +72,7 @@ export class RenderWorker {
     const frame = new Uint8Array(event.frameData)
 
     if (this.decoder.state === 'unconfigured') {
-      const decoderConfig = this.getDecoderConfig(frame)
+      const decoderConfig = getDecoderConfig(frame)
       if (decoderConfig) {
         this.decoder.configure(decoderConfig)
       }
@@ -91,23 +90,6 @@ export class RenderWorker {
         console.error(`H264 Render Worker decode error`, e)
       }
     }
-  }
-
-  private getDecoderConfig(frameData: Uint8Array): VideoDecoderConfig | null {
-    const nalus = getNalus(frameData)
-    const spsNalu = nalus.find(n => n.type === NaluTypes.SPS)
-    if (spsNalu) {
-      const sps = new SPS(spsNalu.nalu.nalu)
-      const decoderConfig: VideoDecoderConfig = {
-        codec: sps.MIME,
-        codedHeight: sps.picHeight,
-        codedWidth: sps.picWidth,
-        hardwareAcceleration: 'prefer-hardware',
-      }
-      console.log(decoderConfig)
-      return decoderConfig
-    }
-    return null
   }
 }
 
