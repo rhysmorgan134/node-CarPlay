@@ -5,6 +5,8 @@ function byte2hex(val: number) {
   return ('00' + val.toString(16)).slice(-2)
 }
 
+const validNaluTypes = new Set(['packet', 'annexB', 'unknown'])
+
 export const profileNames: Map<number, string> = new Map([
   [66, 'BASELINE'],
   [77, 'MAIN'],
@@ -505,7 +507,6 @@ export type StreamType = 'packet' | 'annexB' | 'unknown'
 type NextPackageResult = { n: number; s: number; e: number; message?: string }
 
 export class NALUStream {
-  validTypes: Set<string>
   strict: boolean
   type: StreamType | null
   buf: Uint8Array
@@ -536,7 +537,6 @@ export class NALUStream {
       type: StreamType
     },
   ) {
-    this.validTypes = new Set(['packet', 'annexB', 'unknown'])
     this.strict = false
     this.type = null
     //   this.buf = null;
@@ -550,7 +550,7 @@ export class NALUStream {
       if (options.boxSizeMinusOne) this.boxSize = options.boxSizeMinusOne + 1
       if (options.boxSize) this.boxSize = options.boxSize
       if (options.type) this.type = options.type
-      if (this.type && !this.validTypes.has(this.type))
+      if (this.type && !validNaluTypes.has(this.type))
         throw new Error('NALUStream error: type must be packet or annexB')
     }
 

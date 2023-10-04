@@ -30,6 +30,7 @@ const config: Partial<DongleConfig> = {
 }
 const RETRY_DELAY_MS = 30000
 
+
 function App() {
   const [isPlugged, setPlugged] = useState(false)
   const [deviceFound, setDeviceFound] = useState<Boolean | null>(null)

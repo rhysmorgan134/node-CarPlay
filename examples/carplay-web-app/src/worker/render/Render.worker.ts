@@ -1,12 +1,7 @@
 // Based on https://github.com/codewithpassion/foxglove-studio-h264-extension/tree/main
 // MIT License
-import { NALUStream, SPS } from './lib/h264-utils'
-import {
-  getNalus,
-  identifyNaluStreamInfo,
-  NaluStreamInfo,
-  NaluTypes,
-} from './lib/utils'
+import { SPS } from './lib/h264-utils'
+import { getNalus, isKeyFrame, NaluTypes } from './lib/utils'
 import { InitEvent, RenderEvent, WorkerEvent } from './RenderEvents'
 import { WebGLRenderer } from './WebGLRenderer'
 
@@ -28,8 +23,6 @@ export class RenderWorker {
   private frameCount = 0
   private timestamp = 0
   private fps = 0
-
-  private naluStreamInfo: NaluStreamInfo | null = null
 
   private onVideoDecoderOutput = (frame: VideoFrame) => {
     // Update statistics.
@@ -67,44 +60,18 @@ export class RenderWorker {
     console.error(`H264 Render worker decoder error`, err)
   }
 
-  private getNaluStreamInfo = (imgData: Uint8Array) => {
-    if (this.naluStreamInfo === undefined) {
-      const streamInfo = identifyNaluStreamInfo(imgData)
-      if (streamInfo.type !== 'unknown') {
-        this.naluStreamInfo = streamInfo
-        console.debug(
-          `Stream identified as ${streamInfo.type} with box size: ${streamInfo.boxSize}`,
-        )
-      }
-    }
-    return this.naluStreamInfo
-  }
-
   private decoder = new VideoDecoder({
     output: this.onVideoDecoderOutput,
     error: this.onVideoDecoderOutputError,
   })
-
-  private getAnnexBFrame(frameData: Uint8Array) {
-    const streamInfo = this.getNaluStreamInfo(frameData)
-    if (streamInfo?.type === 'packet') {
-      const res = new NALUStream(frameData, {
-        type: 'packet',
-        boxSize: streamInfo.boxSize,
-      }).convertToAnnexB().buf
-      return res
-    }
-    return frameData
-  }
 
   init = (event: InitEvent) => {
     this.renderer = new WebGLRenderer('webgl', event.canvas)
   }
 
   onFrame = (event: RenderEvent) => {
-    const typedArray = new Uint8Array(event.frameData)
-    // the decoder, as it is configured, expects 'annexB' style h264 data.
-    const frame = this.getAnnexBFrame(typedArray)
+    const frame = new Uint8Array(event.frameData)
+
     if (this.decoder.state === 'unconfigured') {
       const decoderConfig = this.getDecoderConfig(frame)
       if (decoderConfig) {
@@ -112,12 +79,10 @@ export class RenderWorker {
       }
     }
     if (this.decoder.state === 'configured') {
-      const keyframe = this.isKeyFrame(typedArray) ? 'key' : 'delta'
-
       try {
         this.decoder.decode(
           new EncodedVideoChunk({
-            type: keyframe,
+            type: isKeyFrame(frame) ? 'key' : 'delta',
             data: frame,
             timestamp: this.timestamp++,
           }),
@@ -139,14 +104,10 @@ export class RenderWorker {
         codedWidth: sps.picWidth,
         hardwareAcceleration: 'prefer-hardware',
       }
+      console.log(decoderConfig)
       return decoderConfig
     }
     return null
-  }
-
-  private isKeyFrame(frameData: Uint8Array): boolean {
-    const nalus = getNalus(frameData)
-    return nalus.find(n => n.type === NaluTypes.IDR) !== undefined
   }
 }
 

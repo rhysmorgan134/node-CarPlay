@@ -1,22 +1,6 @@
 // Based on https://github.com/codewithpassion/foxglove-studio-h264-extension/tree/main
 // MIT License
-import { Bitstream, NALUStream, StreamType } from './h264-utils'
-
-export type NaluStreamType = StreamType
-export type NaluStreamInfo = { type: NaluStreamType; boxSize: number }
-
-function identifyNaluStreamInfo(buffer: Uint8Array): NaluStreamInfo {
-  let stream: NALUStream | undefined
-  try {
-    stream = new NALUStream(buffer, { strict: true, type: 'unknown' })
-  } catch (err) {
-    stream = undefined
-  }
-  if (stream?.type && stream?.boxSize != null) {
-    return { type: stream.type, boxSize: stream.boxSize }
-  }
-  return { type: 'unknown', boxSize: -1 }
-}
+import { Bitstream, NALUStream } from './h264-utils'
 
 type GetNaluResult = {
   type: number
@@ -29,7 +13,7 @@ function getNalus(buffer: Uint8Array): GetNaluResult {
 
   for (const nalu of stream.nalus()) {
     if (nalu?.nalu) {
-      const bitstream = new Bitstream(nalu?.nalu)
+      const bitstream = new Bitstream(nalu.nalu)
       bitstream.seek(3)
       const nal_unit_type = bitstream.u(5)
       if (nal_unit_type !== undefined) {
@@ -41,6 +25,21 @@ function getNalus(buffer: Uint8Array): GetNaluResult {
   return result
 }
 
+function isKeyFrame(frameData: Uint8Array): boolean {
+  const stream = new NALUStream(frameData, { type: 'annexB' })
+  for (const nalu of stream.nalus()) {
+    if (nalu?.nalu) {
+      const bitstream = new Bitstream(nalu.nalu)
+      bitstream.seek(3)
+      const nal_unit_type = bitstream.u(5)
+      if (nal_unit_type === NaluTypes.IDR) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
 const NaluTypes = {
   NDR: 1,
   IDR: 5,
@@ -50,4 +49,4 @@ const NaluTypes = {
   AUD: 9,
 }
 
-export { identifyNaluStreamInfo, getNalus, NaluTypes }
+export { isKeyFrame, getNalus, NaluTypes }
