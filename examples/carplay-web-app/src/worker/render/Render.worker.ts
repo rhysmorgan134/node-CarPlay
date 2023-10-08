@@ -2,7 +2,9 @@
 // MIT License
 import { getDecoderConfig, isKeyFrame } from './lib/utils'
 import { InitEvent, RenderEvent, WorkerEvent } from './RenderEvents'
+import { WebGL2Renderer } from './WebGL2Renderer'
 import { WebGLRenderer } from './WebGLRenderer'
+import { WebGPURenderer } from './WebGPURenderer'
 
 export interface FrameRenderer {
   draw(data: VideoFrame): void
@@ -65,24 +67,43 @@ export class RenderWorker {
   })
 
   init = (event: InitEvent) => {
-    this.renderer = new WebGLRenderer('webgl', event.canvas)
+    switch (event.renderer) {
+      case 'webgl':
+        this.renderer = new WebGLRenderer(event.canvas)
+        break
+      case 'webgl2':
+        this.renderer = new WebGL2Renderer(event.canvas)
+        break
+      case 'webgpu':
+        this.renderer = new WebGPURenderer(event.canvas)
+        break
+    }
+
+    if (event.reportFps) {
+      setInterval(() => {
+        if (this.decoder.state === 'configured') {
+          console.debug(`FPS: ${this.fps}`)
+        }
+      }, 5000)
+    }
   }
 
   onFrame = (event: RenderEvent) => {
-    const frame = new Uint8Array(event.frameData)
+    const frameData = new Uint8Array(event.frameData)
 
     if (this.decoder.state === 'unconfigured') {
-      const decoderConfig = getDecoderConfig(frame)
+      const decoderConfig = getDecoderConfig(frameData)
       if (decoderConfig) {
         this.decoder.configure(decoderConfig)
+        console.log(decoderConfig)
       }
     }
     if (this.decoder.state === 'configured') {
       try {
         this.decoder.decode(
           new EncodedVideoChunk({
-            type: isKeyFrame(frame) ? 'key' : 'delta',
-            data: frame,
+            type: isKeyFrame(frameData) ? 'key' : 'delta',
+            data: frameData,
             timestamp: this.timestamp++,
           }),
         )

@@ -2,58 +2,46 @@
 // MIT License
 import { Bitstream, NALUStream, SPS } from './h264-utils'
 
-type GetNaluResult = {
-  type: number
-  nalu: { rawNalu: Uint8Array; nalu: Uint8Array }
-}[]
+type GetNaluResult = { type: NaluTypes; nalu: Uint8Array; rawNalu: Uint8Array }
 
-const NaluTypes = {
-  NDR: 1,
-  IDR: 5,
-  SEI: 6,
-  SPS: 7,
-  PPS: 8,
-  AUD: 9,
+enum NaluTypes {
+  NDR = 1,
+  IDR = 5,
+  SEI = 6,
+  SPS = 7,
+  PPS = 8,
+  AUD = 9,
 }
 
-function getNalus(buffer: Uint8Array): GetNaluResult {
+function getNaluFromStream(
+  buffer: Uint8Array,
+  type: NaluTypes,
+): GetNaluResult | null {
   const stream = new NALUStream(buffer, { type: 'annexB' })
-  const result: GetNaluResult = []
 
   for (const nalu of stream.nalus()) {
     if (nalu?.nalu) {
       const bitstream = new Bitstream(nalu.nalu)
       bitstream.seek(3)
       const nal_unit_type = bitstream.u(5)
-      if (nal_unit_type !== undefined) {
-        result.push({ type: nal_unit_type, nalu })
+      if (nal_unit_type === type) {
+        return { type: nal_unit_type, ...nalu }
       }
     }
   }
 
-  return result
+  return null
 }
 
 function isKeyFrame(frameData: Uint8Array): boolean {
-  const stream = new NALUStream(frameData, { type: 'annexB' })
-  for (const nalu of stream.nalus()) {
-    if (nalu?.nalu) {
-      const bitstream = new Bitstream(nalu.nalu)
-      bitstream.seek(3)
-      const nal_unit_type = bitstream.u(5)
-      if (nal_unit_type === NaluTypes.IDR) {
-        return true
-      }
-    }
-  }
-  return false
+  const idr = getNaluFromStream(frameData, NaluTypes.IDR)
+  return Boolean(idr)
 }
 
 function getDecoderConfig(frameData: Uint8Array): VideoDecoderConfig | null {
-  const nalus = getNalus(frameData)
-  const spsNalu = nalus.find(n => n.type === NaluTypes.SPS)
+  const spsNalu = getNaluFromStream(frameData, NaluTypes.SPS)
   if (spsNalu) {
-    const sps = new SPS(spsNalu.nalu.nalu)
+    const sps = new SPS(spsNalu.nalu)
     const decoderConfig: VideoDecoderConfig = {
       codec: sps.MIME,
       codedHeight: sps.picHeight,
