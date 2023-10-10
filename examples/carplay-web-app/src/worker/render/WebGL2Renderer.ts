@@ -3,9 +3,9 @@
 
 import { FrameRenderer } from './Render.worker'
 
-export class WebGLRenderer implements FrameRenderer {
+export class WebGL2Renderer implements FrameRenderer {
   #canvas: OffscreenCanvas | null = null
-  #ctx: WebGLRenderingContext | null = null
+  #ctx: WebGL2RenderingContext | null = null
 
   static vertexShaderSource = `
       attribute vec2 xy;
@@ -32,7 +32,7 @@ export class WebGLRenderer implements FrameRenderer {
 
   constructor(canvas: OffscreenCanvas) {
     this.#canvas = canvas
-    const gl = (this.#ctx = canvas.getContext('webgl'))
+    const gl = (this.#ctx = canvas.getContext('webgl2'))
     if (!gl) {
       throw Error('WebGL context is null')
     }
@@ -43,7 +43,7 @@ export class WebGLRenderer implements FrameRenderer {
       throw Error('VertexShader is null')
     }
 
-    gl.shaderSource(vertexShader, WebGLRenderer.vertexShaderSource)
+    gl.shaderSource(vertexShader, WebGL2Renderer.vertexShaderSource)
     gl.compileShader(vertexShader)
 
     if (gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS) == null) {
@@ -54,7 +54,7 @@ export class WebGLRenderer implements FrameRenderer {
     if (!fragmentShader) {
       throw Error('FragmentShader is null')
     }
-    gl.shaderSource(fragmentShader, WebGLRenderer.fragmentShaderSource)
+    gl.shaderSource(fragmentShader, WebGL2Renderer.fragmentShaderSource)
     gl.compileShader(fragmentShader)
     if (gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS) == null) {
       throw gl.getShaderInfoLog(fragmentShader)

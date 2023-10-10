@@ -1,5 +1,7 @@
 export type WorkerEventType = 'init' | 'frame' | 'renderDone'
 
+export type Renderer = 'webgl' | 'webgl2' | 'webgpu'
+
 export interface WorkerEvent {
   type: WorkerEventType
 }
@@ -13,5 +15,9 @@ export class RenderEvent implements WorkerEvent {
 export class InitEvent implements WorkerEvent {
   type: WorkerEventType = 'init'
 
-  constructor(public canvas: OffscreenCanvas) {}
+  constructor(
+    public canvas: OffscreenCanvas,
+    public renderer: Renderer = 'webgl',
+    public reportFps: boolean = false,
+  ) {}
 }

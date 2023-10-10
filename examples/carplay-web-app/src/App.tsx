@@ -26,9 +26,11 @@ const config: Partial<DongleConfig> = {
   width,
   height,
   fps: 60,
-  mediaDelay: 0,
+  mediaDelay: 300,
 }
+
 const RETRY_DELAY_MS = 30000
+
 
 function App() {
   const [isPlugged, setPlugged] = useState(false)
