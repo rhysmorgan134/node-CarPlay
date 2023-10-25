@@ -54,6 +54,7 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
             const format = decodeTypeMap[decodeType]
             const player = getAudioPlayer(format)
             player.volume(volume, volumeDuration)
+            break
         }
       }
     },
