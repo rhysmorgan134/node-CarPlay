@@ -14,6 +14,7 @@ export enum AudioCommand {
   AudioMediaStop = 11,
   AudioAlertStart = 12,
   AudioAlertStop = 13,
+  AudioVolumeAdjust = 14
 }
 
 export abstract class Message {
@@ -209,6 +210,7 @@ export class AudioData extends Message {
     if (amount === 1) {
       this.command = data.readInt8(12)
     } else if (amount === 4) {
+      this.command = AudioCommand.AudioVolumeAdjust
       this.volumeDuration = data.readUInt32LE(12)
     } else {
       this.data = new Int16Array(data.buffer, 12)

@@ -49,6 +49,11 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
             const mediaPlayer = getAudioPlayer(decodeTypeMap[audio.decodeType])
             mediaPlayer.volume(defaultAudioVolume)
             break
+          case AudioCommand.AudioVolumeAdjust:
+            const { decodeType, volume, volumeDuration} = audio
+            const format = decodeTypeMap[decodeType]
+            const player = getAudioPlayer(format)
+            player.volume(volume, volumeDuration)
         }
       }
     },
