@@ -209,7 +209,7 @@ export class AudioData extends Message {
     if (amount === 1) {
       this.command = data.readInt8(12)
     } else if (amount === 4) {
-      this.volumeDuration = data.readUInt32LE(12)
+      this.volumeDuration = data.readFloatLE(12)
     } else {
       this.data = new Int16Array(data.buffer, 12)
     }
