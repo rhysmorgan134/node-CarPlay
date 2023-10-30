@@ -4,7 +4,6 @@ import {
   AudioCommand,
   AudioData,
   WebMicrophone,
-  AudioFormat,
   decodeTypeMap,
 } from 'node-carplay/web'
 import { PcmPlayer } from 'pcm-ringbuf-player'
