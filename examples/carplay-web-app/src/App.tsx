@@ -17,10 +17,12 @@ import {
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
 import { useCarplayTouch } from './useCarplayTouch'
-import { InitEvent, RenderEvent } from './worker/render/RenderEvents'
+import { InitEvent } from './worker/render/RenderEvents'
 
 const width = window.innerWidth
 const height = window.innerHeight
+
+const videoChannel = new MessageChannel()
 
 const config: Partial<DongleConfig> = {
   width,
@@ -35,7 +37,6 @@ const RETRY_DELAY_MS = 30000
 function App() {
   const [isPlugged, setPlugged] = useState(false)
   const [deviceFound, setDeviceFound] = useState<Boolean | null>(null)
-  const [receivingVideo, setReceivingVideo] = useState(false)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -50,7 +51,7 @@ function App() {
       new URL('./worker/render/Render.worker.ts', import.meta.url),
     )
     const canvas = canvasElement.transferControlToOffscreen()
-    worker.postMessage(new InitEvent(canvas), [canvas])
+    worker.postMessage(new InitEvent(canvas, videoChannel.port2), [canvas, videoChannel.port2])
     return worker
   }, [canvasElement])
 
@@ -88,18 +89,6 @@ function App() {
           break
         case 'unplugged':
           setPlugged(false)
-          break
-        case 'video':
-          // if document is hidden we dont need to feed frames
-          if (!renderWorker || document.hidden) return
-          if (!receivingVideo) setReceivingVideo(true)
-          clearRetryTimeout()
-
-          const { message: video } = ev.data
-          renderWorker.postMessage(new RenderEvent(video.data), [
-            video.data.buffer,
-          ])
-
           break
         case 'audio':
           clearRetryTimeout()
@@ -139,7 +128,6 @@ function App() {
     carplayWorker,
     clearRetryTimeout,
     processAudio,
-    receivingVideo,
     renderWorker,
     startRecording,
     stopRecording,
@@ -150,7 +138,11 @@ function App() {
       const device = request ? await requestDevice() : await findDevice()
       if (device) {
         setDeviceFound(true)
-        carplayWorker.postMessage({ type: 'start', payload: config })
+        const payload = {
+          config,
+          videoPort: videoChannel.port1
+        }
+        carplayWorker.postMessage({ type: 'start', payload }, [videoChannel.port1])
       } else {
         setDeviceFound(false)
       }
@@ -181,7 +173,7 @@ function App() {
 
   const sendTouchEvent = useCarplayTouch(carplayWorker, width, height)
 
-  const isLoading = !receivingVideo || !isPlugged
+  const isLoading = !isPlugged
 
   return (
     <div
