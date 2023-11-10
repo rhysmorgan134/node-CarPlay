@@ -26,10 +26,13 @@ const handleMessage = (message: CarplayMessage) => {
 
 onmessage = async (event: MessageEvent<Command>) => {
   switch (event.data.type) {
+    case 'initialise':
+      if (carplayWeb) return
+      videoPort = event.data.payload.videoPort
+      break
     case 'start':
       if (carplayWeb) return
       config = event.data.payload.config
-      videoPort = event.data.payload.videoPort
       const device = await findDevice()
       if (device) {
         carplayWeb = new CarplayWeb(config)

@@ -33,7 +33,6 @@ const config: Partial<DongleConfig> = {
 
 const RETRY_DELAY_MS = 30000
 
-
 function App() {
   const [isPlugged, setPlugged] = useState(false)
   const [deviceFound, setDeviceFound] = useState<Boolean | null>(null)
@@ -51,7 +50,10 @@ function App() {
       new URL('./worker/render/Render.worker.ts', import.meta.url),
     )
     const canvas = canvasElement.transferControlToOffscreen()
-    worker.postMessage(new InitEvent(canvas, videoChannel.port2), [canvas, videoChannel.port2])
+    worker.postMessage(new InitEvent(canvas, videoChannel.port2), [
+      canvas,
+      videoChannel.port2,
+    ])
     return worker
   }, [canvasElement])
 
@@ -61,13 +63,16 @@ function App() {
     }
   }, [])
 
-  const carplayWorker = useMemo(
-    () =>
-      new Worker(
-        new URL('./worker/CarPlay.worker.ts', import.meta.url),
-      ) as CarPlayWorker,
-    [],
-  )
+  const carplayWorker = useMemo(() => {
+    const worker = new Worker(
+      new URL('./worker/CarPlay.worker.ts', import.meta.url),
+    ) as CarPlayWorker
+    const payload = {
+      videoPort: videoChannel.port1,
+    }
+    worker.postMessage({ type: 'initialise', payload }, [videoChannel.port1])
+    return worker
+  }, [])
 
   const { processAudio, startRecording, stopRecording } =
     useCarplayAudio(carplayWorker)
@@ -140,9 +145,8 @@ function App() {
         setDeviceFound(true)
         const payload = {
           config,
-          videoPort: videoChannel.port1
         }
-        carplayWorker.postMessage({ type: 'start', payload }, [videoChannel.port1])
+        carplayWorker.postMessage({ type: 'start', payload })
       } else {
         setDeviceFound(false)
       }
