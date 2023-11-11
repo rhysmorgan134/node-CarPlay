@@ -79,10 +79,8 @@ function App() {
     return worker
   }, [])
 
-  const { processAudio, getAudioPlayer, startRecording, stopRecording } = useCarplayAudio(
-    carplayWorker,
-    micChannel.port2,
-  )
+  const { processAudio, getAudioPlayer, startRecording, stopRecording } =
+    useCarplayAudio(carplayWorker, micChannel.port2)
 
   const clearRetryTimeout = useCallback(() => {
     if (retryTimeoutRef.current) {
@@ -141,6 +139,7 @@ function App() {
   }, [
     carplayWorker,
     clearRetryTimeout,
+    getAudioPlayer,
     processAudio,
     renderWorker,
     startRecording,

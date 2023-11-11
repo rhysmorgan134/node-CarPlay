@@ -16,7 +16,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "types": ["@webgpu/types"],
-    "typeRoots": ["types", "node_modules/@types"],
+    "typeRoots": ["types", "node_modules/@types"]
   },
   "include": ["src", "types"]
 }
