@@ -79,7 +79,7 @@ function App() {
     return worker
   }, [])
 
-  const { processAudio, startRecording, stopRecording } = useCarplayAudio(
+  const { processAudio, getAudioPlayer, startRecording, stopRecording } = useCarplayAudio(
     carplayWorker,
     micChannel.port2,
   )
@@ -102,11 +102,13 @@ function App() {
         case 'unplugged':
           setPlugged(false)
           break
+        case 'getAudioPlayer':
+          clearRetryTimeout()
+          getAudioPlayer(ev.data.message)
+          break
         case 'audio':
           clearRetryTimeout()
-
-          const { message: audio } = ev.data
-          processAudio(audio)
+          processAudio(ev.data.message)
           break
         case 'media':
           //TODO: implement

@@ -4,22 +4,45 @@ import CarplayWeb, {
   SendAudio,
   SendCommand,
   SendTouch,
+  decodeTypeMap,
   findDevice,
 } from 'node-carplay/web'
 import { Command } from './types'
 import { RenderEvent } from './render/RenderEvents'
+import { RingBuffer } from 'ringbuf.js'
 
 let carplayWeb: CarplayWeb | null = null
 let videoPort: MessagePort | null = null
 let microphonePort: MessagePort | null = null
 let config: Partial<DongleConfig> | null = null
+const audioBuffers: Record<string, RingBuffer<Int16Array>> = {}
+const pendingAudio: Record<string, Int16Array[]> = {}
 
 const handleMessage = (message: CarplayMessage) => {
   const { type, message: payload } = message
   if (type === 'video' && videoPort) {
     videoPort.postMessage(new RenderEvent(payload.data), [payload.data.buffer])
   } else if (type === 'audio' && payload.data) {
-    postMessage(message, [payload.data.buffer])
+    const { decodeType, audioType } = payload
+    const format = decodeTypeMap[decodeType]
+    const audioKey = [format.frequency, format.channel, audioType].join('_')
+    if (audioBuffers[audioKey]) {
+      audioBuffers[audioKey].push(payload.data)
+    } else {
+      if (!pendingAudio[audioKey]) {
+        pendingAudio[audioKey] = []
+      }
+      pendingAudio[audioKey].push(payload.data)
+      payload.data = undefined
+
+      const getPlayerMessage = {
+        type: 'getAudioPlayer',
+        message: {
+          ...payload,
+        },
+      }
+      postMessage(getPlayerMessage)
+    }
   } else {
     postMessage(message)
   }
@@ -36,6 +59,17 @@ onmessage = async (event: MessageEvent<Command>) => {
           const data = new SendAudio(ev.data)
           carplayWeb.dongleDriver.send(data)
         }
+      }
+      break
+    case 'audioPlayer':
+      const { sab, format, audioType } = event.data.payload
+      const audioKey = [format.frequency, format.channel, audioType].join('_')
+      audioBuffers[audioKey] = new RingBuffer(sab, Int16Array)
+      if (pendingAudio[audioKey]) {
+        pendingAudio[audioKey].forEach(buf => {
+          audioBuffers[audioKey].push(buf)
+        })
+        pendingAudio[audioKey] = []
       }
       break
     case 'start':

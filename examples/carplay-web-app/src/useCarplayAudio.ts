@@ -31,18 +31,22 @@ const useCarplayAudio = (
       audioPlayers.set(audioKey, player)
       player.volume(defaultAudioVolume)
       player.start()
+      worker.postMessage({
+        type: 'audioPlayer',
+        payload: {
+          sab: player.rb.buf,
+          format,
+          audioType,
+        },
+      })
       return player
     },
-    [audioPlayers],
+    [audioPlayers, worker],
   )
 
   const processAudio = useCallback(
     (audio: AudioData) => {
-      if (audio.data) {
-        const { data } = audio
-        const player = getAudioPlayer(audio)
-        player.feed(data)
-      } else if (audio.volumeDuration) {
+      if (audio.volumeDuration) {
         const { volume, volumeDuration } = audio
         const player = getAudioPlayer(audio)
         player.volume(volume, volumeDuration)
@@ -92,7 +96,7 @@ const useCarplayAudio = (
     mic?.stop()
   }, [mic])
 
-  return { processAudio, startRecording, stopRecording }
+  return { processAudio, getAudioPlayer, startRecording, stopRecording }
 }
 
 export default useCarplayAudio

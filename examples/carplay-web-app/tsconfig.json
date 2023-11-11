@@ -15,7 +15,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["@webgpu/types"]
+    "types": ["@webgpu/types"],
+    "typeRoots": ["types", "node_modules/@types"],
   },
-  "include": ["src"]
+  "include": ["src", "types"]
 }
