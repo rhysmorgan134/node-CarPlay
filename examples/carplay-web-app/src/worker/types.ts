@@ -4,6 +4,7 @@ export type CarplayWorkerMessage = { data: CarplayMessage }
 
 export type InitialisePayload = {
   videoPort: MessagePort
+  microphonePort: MessagePort
 }
 
 export type StartPayload = {

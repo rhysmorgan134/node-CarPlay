@@ -23,6 +23,7 @@ const width = window.innerWidth
 const height = window.innerHeight
 
 const videoChannel = new MessageChannel()
+const micChannel = new MessageChannel()
 
 const config: Partial<DongleConfig> = {
   width,
@@ -69,13 +70,19 @@ function App() {
     ) as CarPlayWorker
     const payload = {
       videoPort: videoChannel.port1,
+      microphonePort: micChannel.port1,
     }
-    worker.postMessage({ type: 'initialise', payload }, [videoChannel.port1])
+    worker.postMessage({ type: 'initialise', payload }, [
+      videoChannel.port1,
+      micChannel.port1,
+    ])
     return worker
   }, [])
 
-  const { processAudio, startRecording, stopRecording } =
-    useCarplayAudio(carplayWorker)
+  const { processAudio, startRecording, stopRecording } = useCarplayAudio(
+    carplayWorker,
+    micChannel.port2,
+  )
 
   const clearRetryTimeout = useCallback(() => {
     if (retryTimeoutRef.current) {

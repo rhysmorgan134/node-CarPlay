@@ -7,7 +7,7 @@ export default class WebMicrophone extends EventEmitter {
   private inputStream: MediaStreamAudioSourceNode
   private recorder: AudioWorkletNode | null = null
 
-  constructor(mediaStream: MediaStream) {
+  constructor(mediaStream: MediaStream, messagePort: MessagePort) {
     super()
     const audioContext = new AudioContext({ sampleRate: this.sampleRate })
     this.inputStream = audioContext.createMediaStreamSource(mediaStream)
@@ -16,13 +16,8 @@ export default class WebMicrophone extends EventEmitter {
       .addModule(new URL('./recorder.worklet.js', import.meta.url))
       .then(() => {
         this.recorder = new AudioWorkletNode(audioContext, 'recorder.worklet')
-        this.recorder.port.onmessage = this.handleData
+        this.recorder.port.postMessage(messagePort, [messagePort])
       })
-  }
-
-  private handleData = async (e: { data: Int16Array }) => {
-    if (!this.active) return
-    this.emit('data', e.data)
   }
 
   async start() {

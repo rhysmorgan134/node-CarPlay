@@ -2,10 +2,14 @@ class RecorderProcessor extends AudioWorkletProcessor {
   bufferSize = 2048
   _bytesWritten = 0
   _buffer = new Float32Array(this.bufferSize)
+  _outPort: MessagePort | undefined
 
   constructor() {
     super()
     this.initBuffer()
+    this.port.onmessage = ev => {
+      this._outPort = ev.data
+    }
   }
 
   private floatTo16BitPCM(input: Float32Array) {
@@ -62,7 +66,9 @@ class RecorderProcessor extends AudioWorkletProcessor {
         ? this._buffer.slice(0, this._bytesWritten)
         : this._buffer,
     )
-    this.port.postMessage(data, [data.buffer])
+    if (this._outPort) {
+      this._outPort.postMessage(data, [data.buffer])
+    }
     this.initBuffer()
   }
 }

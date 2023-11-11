@@ -11,6 +11,7 @@ import { RenderEvent } from './render/RenderEvents'
 
 let carplayWeb: CarplayWeb | null = null
 let videoPort: MessagePort | null = null
+let microphonePort: MessagePort | null = null
 let config: Partial<DongleConfig> | null = null
 
 const handleMessage = (message: CarplayMessage) => {
@@ -29,6 +30,13 @@ onmessage = async (event: MessageEvent<Command>) => {
     case 'initialise':
       if (carplayWeb) return
       videoPort = event.data.payload.videoPort
+      microphonePort = event.data.payload.microphonePort
+      microphonePort.onmessage = ev => {
+        if (carplayWeb) {
+          const data = new SendAudio(ev.data)
+          carplayWeb.dongleDriver.send(data)
+        }
+      }
       break
     case 'start':
       if (carplayWeb) return
@@ -50,12 +58,6 @@ onmessage = async (event: MessageEvent<Command>) => {
     case 'stop':
       await carplayWeb?.stop()
       carplayWeb = null
-      break
-    case 'microphoneInput':
-      if (carplayWeb) {
-        const data = new SendAudio(event.data.payload)
-        carplayWeb.dongleDriver.send(data)
-      }
       break
     case 'frame':
       if (carplayWeb) {

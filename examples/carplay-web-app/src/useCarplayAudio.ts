@@ -13,7 +13,10 @@ import { CarPlayWorker } from './worker/types'
 const defaultAudioVolume = 1
 const defaultNavVolume = 0.5
 
-const useCarplayAudio = (worker: CarPlayWorker) => {
+const useCarplayAudio = (
+  worker: CarPlayWorker,
+  microphonePort: MessagePort,
+) => {
   const [mic, setMic] = useState<WebMicrophone | null>(null)
   const [audioPlayers] = useState(new Map<string, PcmPlayer>())
 
@@ -67,17 +70,7 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         })
-        const mic = new WebMicrophone(mediaStream)
-        mic.on('data', payload => {
-          worker.postMessage(
-            {
-              type: 'microphoneInput',
-              payload,
-            },
-            [payload.buffer],
-          )
-        })
-
+        const mic = new WebMicrophone(mediaStream, microphonePort)
         setMic(mic)
       } catch (err) {
         console.error('Failed to init microphone', err)
@@ -89,7 +82,7 @@ const useCarplayAudio = (worker: CarPlayWorker) => {
     return () => {
       audioPlayers.forEach(p => p.stop())
     }
-  }, [audioPlayers, worker])
+  }, [audioPlayers, worker, microphonePort])
 
   const startRecording = useCallback(() => {
     mic?.start()
