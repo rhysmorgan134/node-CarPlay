@@ -60,7 +60,7 @@ onmessage = async (event: MessageEvent<Command>) => {
         }
       }
       break
-    case 'audioPlayer':
+    case 'audioBuffer':
       const { sab, decodeType, audioType } = event.data.payload
       const audioKey = createAudioPlayerKey(decodeType, audioType)
       audioBuffers[audioKey] = new RingBuffer(sab, Int16Array)
