@@ -100,7 +100,7 @@ function App() {
         case 'unplugged':
           setPlugged(false)
           break
-        case 'getAudioPlayer':
+        case 'requestBuffer':
           clearRetryTimeout()
           getAudioPlayer(ev.data.message)
           break

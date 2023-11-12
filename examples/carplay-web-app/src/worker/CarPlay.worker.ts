@@ -4,19 +4,19 @@ import CarplayWeb, {
   SendAudio,
   SendCommand,
   SendTouch,
-  decodeTypeMap,
   findDevice,
 } from 'node-carplay/web'
-import { Command } from './types'
+import { AudioPlayerKey, Command } from './types'
 import { RenderEvent } from './render/RenderEvents'
 import { RingBuffer } from 'ringbuf.js'
+import { createAudioPlayerKey } from './utils'
 
 let carplayWeb: CarplayWeb | null = null
 let videoPort: MessagePort | null = null
 let microphonePort: MessagePort | null = null
 let config: Partial<DongleConfig> | null = null
-const audioBuffers: Record<string, RingBuffer<Int16Array>> = {}
-const pendingAudio: Record<string, Int16Array[]> = {}
+const audioBuffers: Record<AudioPlayerKey, RingBuffer<Int16Array>> = {}
+const pendingAudio: Record<AudioPlayerKey, Int16Array[]> = {}
 
 const handleMessage = (message: CarplayMessage) => {
   const { type, message: payload } = message
@@ -24,8 +24,7 @@ const handleMessage = (message: CarplayMessage) => {
     videoPort.postMessage(new RenderEvent(payload.data), [payload.data.buffer])
   } else if (type === 'audio' && payload.data) {
     const { decodeType, audioType } = payload
-    const format = decodeTypeMap[decodeType]
-    const audioKey = [format.frequency, format.channel, audioType].join('_')
+    const audioKey = createAudioPlayerKey(decodeType, audioType)
     if (audioBuffers[audioKey]) {
       audioBuffers[audioKey].push(payload.data)
     } else {
@@ -62,8 +61,8 @@ onmessage = async (event: MessageEvent<Command>) => {
       }
       break
     case 'audioPlayer':
-      const { sab, format, audioType } = event.data.payload
-      const audioKey = [format.frequency, format.channel, audioType].join('_')
+      const { sab, decodeType, audioType } = event.data.payload
+      const audioKey = createAudioPlayerKey(decodeType, audioType)
       audioBuffers[audioKey] = new RingBuffer(sab, Int16Array)
       if (pendingAudio[audioKey]) {
         pendingAudio[audioKey].forEach(buf => {

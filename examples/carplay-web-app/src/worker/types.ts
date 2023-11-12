@@ -2,13 +2,14 @@ import {
   DongleConfig,
   TouchAction,
   CarplayMessage,
-  AudioFormat,
   AudioData,
 } from 'node-carplay/web'
 
+export type AudioPlayerKey = string & { __brand: 'AudioPlayerKey' }
+
 export type CarplayWorkerMessage =
   | { data: CarplayMessage }
-  | { data: { type: 'getAudioPlayer'; message: AudioData } }
+  | { data: { type: 'requestBuffer'; message: AudioData } }
 
 export type InitialisePayload = {
   videoPort: MessagePort
@@ -17,7 +18,7 @@ export type InitialisePayload = {
 
 export type AudioPlayerPayload = {
   sab: SharedArrayBuffer
-  format: AudioFormat
+  decodeType: number
   audioType: number
 }
 
@@ -29,7 +30,7 @@ export type Command =
   | { type: 'frame' }
   | { type: 'stop' }
   | { type: 'initialise'; payload: InitialisePayload }
-  | { type: 'audioPlayer'; payload: AudioPlayerPayload }
+  | { type: 'audioBuffer'; payload: AudioPlayerPayload }
   | { type: 'start'; payload: StartPayload }
   | { type: 'touch'; payload: { x: number; y: number; action: TouchAction } }
 

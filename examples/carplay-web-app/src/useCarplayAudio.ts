@@ -7,7 +7,8 @@ import {
   decodeTypeMap,
 } from 'node-carplay/web'
 import { PcmPlayer } from 'pcm-ringbuf-player'
-import { CarPlayWorker } from './worker/types'
+import { AudioPlayerKey, CarPlayWorker } from './worker/types'
+import { createAudioPlayerKey } from './worker/utils'
 
 //TODO: allow to configure
 const defaultAudioVolume = 1
@@ -18,13 +19,13 @@ const useCarplayAudio = (
   microphonePort: MessagePort,
 ) => {
   const [mic, setMic] = useState<WebMicrophone | null>(null)
-  const [audioPlayers] = useState(new Map<string, PcmPlayer>())
+  const [audioPlayers] = useState(new Map<AudioPlayerKey, PcmPlayer>())
 
   const getAudioPlayer = useCallback(
     (audio: AudioData): PcmPlayer => {
       const { decodeType, audioType } = audio
       const format = decodeTypeMap[decodeType]
-      const audioKey = [format.frequency, format.channel, audioType].join('_')
+      const audioKey = createAudioPlayerKey(decodeType, audioType)
       let player = audioPlayers.get(audioKey)
       if (player) return player
       player = new PcmPlayer(format.frequency, format.channel)
@@ -32,10 +33,10 @@ const useCarplayAudio = (
       player.volume(defaultAudioVolume)
       player.start()
       worker.postMessage({
-        type: 'audioPlayer',
+        type: 'audioBuffer',
         payload: {
           sab: player.rb.buf,
-          format,
+          decodeType,
           audioType,
         },
       })
