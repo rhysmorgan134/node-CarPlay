@@ -35,7 +35,7 @@ const useCarplayAudio = (
       worker.postMessage({
         type: 'audioBuffer',
         payload: {
-          sab: player.rb.buf,
+          sab: player.getRawBuffer(),
           decodeType,
           audioType,
         },
