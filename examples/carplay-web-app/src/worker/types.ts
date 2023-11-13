@@ -1,13 +1,38 @@
-import { DongleConfig, TouchAction, CarplayMessage } from 'node-carplay/web'
+import {
+  DongleConfig,
+  TouchAction,
+  CarplayMessage,
+  AudioData,
+} from 'node-carplay/web'
 
-export type CarplayWorkerMessage = { data: CarplayMessage }
+export type AudioPlayerKey = string & { __brand: 'AudioPlayerKey' }
+
+export type CarplayWorkerMessage =
+  | { data: CarplayMessage }
+  | { data: { type: 'requestBuffer'; message: AudioData } }
+
+export type InitialisePayload = {
+  videoPort: MessagePort
+  microphonePort: MessagePort
+}
+
+export type AudioPlayerPayload = {
+  sab: SharedArrayBuffer
+  decodeType: number
+  audioType: number
+}
+
+export type StartPayload = {
+  config: Partial<DongleConfig>
+}
 
 export type Command =
   | { type: 'frame' }
   | { type: 'stop' }
-  | { type: 'start'; payload: Partial<DongleConfig> }
+  | { type: 'initialise'; payload: InitialisePayload }
+  | { type: 'audioBuffer'; payload: AudioPlayerPayload }
+  | { type: 'start'; payload: StartPayload }
   | { type: 'touch'; payload: { x: number; y: number; action: TouchAction } }
-  | { type: 'microphoneInput'; payload: Int16Array }
 
 export interface CarPlayWorker
   extends Omit<Worker, 'postMessage' | 'onmessage'> {

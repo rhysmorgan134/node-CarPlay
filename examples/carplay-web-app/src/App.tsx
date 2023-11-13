@@ -17,10 +17,13 @@ import {
 import { CarPlayWorker } from './worker/types'
 import useCarplayAudio from './useCarplayAudio'
 import { useCarplayTouch } from './useCarplayTouch'
-import { InitEvent, RenderEvent } from './worker/render/RenderEvents'
+import { InitEvent } from './worker/render/RenderEvents'
 
 const width = window.innerWidth
 const height = window.innerHeight
+
+const videoChannel = new MessageChannel()
+const micChannel = new MessageChannel()
 
 const config: Partial<DongleConfig> = {
   width,
@@ -31,11 +34,9 @@ const config: Partial<DongleConfig> = {
 
 const RETRY_DELAY_MS = 30000
 
-
 function App() {
   const [isPlugged, setPlugged] = useState(false)
   const [deviceFound, setDeviceFound] = useState<Boolean | null>(null)
-  const [receivingVideo, setReceivingVideo] = useState(false)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -50,7 +51,10 @@ function App() {
       new URL('./worker/render/Render.worker.ts', import.meta.url),
     )
     const canvas = canvasElement.transferControlToOffscreen()
-    worker.postMessage(new InitEvent(canvas), [canvas])
+    worker.postMessage(new InitEvent(canvas, videoChannel.port2), [
+      canvas,
+      videoChannel.port2,
+    ])
     return worker
   }, [canvasElement])
 
@@ -60,16 +64,23 @@ function App() {
     }
   }, [])
 
-  const carplayWorker = useMemo(
-    () =>
-      new Worker(
-        new URL('./worker/CarPlay.worker.ts', import.meta.url),
-      ) as CarPlayWorker,
-    [],
-  )
+  const carplayWorker = useMemo(() => {
+    const worker = new Worker(
+      new URL('./worker/CarPlay.worker.ts', import.meta.url),
+    ) as CarPlayWorker
+    const payload = {
+      videoPort: videoChannel.port1,
+      microphonePort: micChannel.port1,
+    }
+    worker.postMessage({ type: 'initialise', payload }, [
+      videoChannel.port1,
+      micChannel.port1,
+    ])
+    return worker
+  }, [])
 
-  const { processAudio, startRecording, stopRecording } =
-    useCarplayAudio(carplayWorker)
+  const { processAudio, getAudioPlayer, startRecording, stopRecording } =
+    useCarplayAudio(carplayWorker, micChannel.port2)
 
   const clearRetryTimeout = useCallback(() => {
     if (retryTimeoutRef.current) {
@@ -89,23 +100,13 @@ function App() {
         case 'unplugged':
           setPlugged(false)
           break
-        case 'video':
-          // if document is hidden we dont need to feed frames
-          if (!renderWorker || document.hidden) return
-          if (!receivingVideo) setReceivingVideo(true)
+        case 'requestBuffer':
           clearRetryTimeout()
-
-          const { message: video } = ev.data
-          renderWorker.postMessage(new RenderEvent(video.data), [
-            video.data.buffer,
-          ])
-
+          getAudioPlayer(ev.data.message)
           break
         case 'audio':
           clearRetryTimeout()
-
-          const { message: audio } = ev.data
-          processAudio(audio)
+          processAudio(ev.data.message)
           break
         case 'media':
           //TODO: implement
@@ -138,8 +139,8 @@ function App() {
   }, [
     carplayWorker,
     clearRetryTimeout,
+    getAudioPlayer,
     processAudio,
-    receivingVideo,
     renderWorker,
     startRecording,
     stopRecording,
@@ -150,7 +151,10 @@ function App() {
       const device = request ? await requestDevice() : await findDevice()
       if (device) {
         setDeviceFound(true)
-        carplayWorker.postMessage({ type: 'start', payload: config })
+        const payload = {
+          config,
+        }
+        carplayWorker.postMessage({ type: 'start', payload })
       } else {
         setDeviceFound(false)
       }
@@ -181,7 +185,7 @@ function App() {
 
   const sendTouchEvent = useCarplayTouch(carplayWorker, width, height)
 
-  const isLoading = !receivingVideo || !isPlugged
+  const isLoading = !isPlugged
 
   return (
     <div

@@ -17,6 +17,7 @@ export class InitEvent implements WorkerEvent {
 
   constructor(
     public canvas: OffscreenCanvas,
+    public videoPort: MessagePort,
     public renderer: Renderer = 'webgl',
     public reportFps: boolean = false,
   ) {}

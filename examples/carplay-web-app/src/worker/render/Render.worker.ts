@@ -19,6 +19,7 @@ export class RenderWorker {
   constructor(private host: HostType) {}
 
   private renderer: FrameRenderer | null = null
+  private videoPort: MessagePort | null = null
   private pendingFrame: VideoFrame | null = null
   private startTime: number | null = null
   private frameCount = 0
@@ -78,6 +79,10 @@ export class RenderWorker {
         this.renderer = new WebGPURenderer(event.canvas)
         break
     }
+    this.videoPort = event.videoPort
+    this.videoPort.onmessage = ev => {
+      this.onFrame(ev.data as RenderEvent)
+    }
 
     if (event.reportFps) {
       setInterval(() => {
@@ -119,8 +124,6 @@ const worker = new RenderWorker(self)
 scope.addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
   if (event.data.type === 'init') {
     worker.init(event.data as InitEvent)
-  } else if (event.data.type === 'frame') {
-    worker.onFrame(event.data as RenderEvent)
   }
 })
 
