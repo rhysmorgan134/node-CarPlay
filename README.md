@@ -4,6 +4,9 @@
     Carplay dongle driver for Node.js & Browser
 </p>
 
+## Join us on Slack
+https://join.slack.com/t/automotive-pis/shared_invite/zt-27n3manj4-v0Q35NWPyHUAtrHl7sScjQ
+
 <!-- TABLE OF CONTENTS -->
 <details open="open">
   <summary>Table of Contents</summary>
