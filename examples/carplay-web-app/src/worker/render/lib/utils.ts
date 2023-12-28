@@ -46,7 +46,6 @@ function getDecoderConfig(frameData: Uint8Array): VideoDecoderConfig | null {
       codec: sps.MIME,
       codedHeight: sps.picHeight,
       codedWidth: sps.picWidth,
-      hardwareAcceleration: 'prefer-hardware',
     }
     return decoderConfig
   }
