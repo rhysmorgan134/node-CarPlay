@@ -1,8 +1,8 @@
 import {
   DongleConfig,
-  TouchAction,
   CarplayMessage,
   AudioData,
+  MultiTouchAction,
 } from 'node-carplay/web'
 
 export type AudioPlayerKey = string & { __brand: 'AudioPlayerKey' }
@@ -32,7 +32,10 @@ export type Command =
   | { type: 'initialise'; payload: InitialisePayload }
   | { type: 'audioBuffer'; payload: AudioPlayerPayload }
   | { type: 'start'; payload: StartPayload }
-  | { type: 'touch'; payload: { x: number; y: number; action: TouchAction } }
+  | {
+      type: 'touch'
+      payload: { x: number; y: number; action: MultiTouchAction }[]
+    }
 
 export interface CarPlayWorker
   extends Omit<Worker, 'postMessage' | 'onmessage'> {

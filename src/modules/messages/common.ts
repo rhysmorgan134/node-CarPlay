@@ -82,6 +82,7 @@ export enum MessageType {
   WifiDeviceName = 0x0e,
   BluetoothPairedList = 0x12,
   ManufacturerInfo = 0x14,
+  MultiTouch = 0x17,
   HiCarLink = 0x18,
   BoxSettings = 0x19,
   MediaData = 0x2a,

@@ -3,7 +3,7 @@ import CarplayWeb, {
   DongleConfig,
   SendAudio,
   SendCommand,
-  SendTouch,
+  SendMultiTouch,
   findDevice,
 } from 'node-carplay/web'
 import { AudioPlayerKey, Command } from './types'
@@ -83,8 +83,7 @@ onmessage = async (event: MessageEvent<Command>) => {
       break
     case 'touch':
       if (config && carplayWeb) {
-        const { x, y, action } = event.data.payload
-        const data = new SendTouch(x, y, action)
+        const data = new SendMultiTouch(event.data.payload)
         carplayWeb.dongleDriver.send(data)
       }
       break
