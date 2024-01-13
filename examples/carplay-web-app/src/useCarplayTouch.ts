@@ -1,30 +1,31 @@
-import { useState, useCallback } from 'react'
-import { TouchAction } from 'node-carplay/web'
+import { useCallback } from 'react'
+import { MultiTouchAction } from 'node-carplay/web'
 import { CarPlayWorker } from './worker/types'
+
+const pointerCache = new Map<
+  number,
+  { x: number; y: number; action: MultiTouchAction }
+>()
 
 export const useCarplayTouch = (
   worker: CarPlayWorker,
   width: number,
   height: number,
 ) => {
-  const [pointerdown, setPointerDown] = useState(false)
-
   const sendTouchEvent: React.PointerEventHandler<HTMLDivElement> = useCallback(
     e => {
-      let action = TouchAction.Up
+      let action = MultiTouchAction.Up
       if (e.type === 'pointerdown') {
-        action = TouchAction.Down
-        setPointerDown(true)
-      } else if (pointerdown) {
+        action = MultiTouchAction.Down
+      } else if (pointerCache.has(e.pointerId)) {
         switch (e.type) {
           case 'pointermove':
-            action = TouchAction.Move
+            action = MultiTouchAction.Move
             break
           case 'pointerup':
           case 'pointercancel':
           case 'pointerout':
-            setPointerDown(false)
-            action = TouchAction.Up
+            action = MultiTouchAction.Up
             break
         }
       } else {
@@ -32,12 +33,18 @@ export const useCarplayTouch = (
       }
 
       const { offsetX: x, offsetY: y } = e.nativeEvent
+      pointerCache.set(e.pointerId, { x: x / width, y: y / height, action })
+
       worker.postMessage({
         type: 'touch',
-        payload: { x: x / width, y: y / height, action },
+        payload: [...pointerCache.values()],
       })
+
+      if (action === MultiTouchAction.Up) {
+        pointerCache.delete(e.pointerId)
+      }
     },
-    [pointerdown, worker, width, height],
+    [worker, width, height],
   )
 
   return sendTouchEvent

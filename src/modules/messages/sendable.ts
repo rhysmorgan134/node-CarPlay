@@ -80,6 +80,59 @@ export class SendTouch extends SendableMessageWithPayload {
   }
 }
 
+export enum MultiTouchAction {
+  Down = 1,
+  Move = 2,
+  Up = 0,
+}
+
+class TouchItem {
+  x: number
+  y: number
+  action: MultiTouchAction
+  id: number
+
+  constructor(x: number, y: number, action: MultiTouchAction, id: number) {
+    this.x = x
+    this.y = y
+    this.action = action
+    this.id = id
+  }
+
+  getPayload(): Buffer {
+    const actionB = Buffer.alloc(4)
+    const xB = Buffer.alloc(4)
+    const yB = Buffer.alloc(4)
+    const idB = Buffer.alloc(4)
+    actionB.writeUInt32LE(this.action)
+    idB.writeUInt32LE(this.id)
+
+    //const finalX = clamp(10000 * this.x, 0, 10000)
+    //const finalY = clamp(10000 * this.y, 0, 10000)
+
+    xB.writeFloatLE(this.x)
+    yB.writeFloatLE(this.y)
+    const data = Buffer.concat([xB, yB, actionB, idB])
+    return data
+  }
+}
+export class SendMultiTouch extends SendableMessageWithPayload {
+  type = MessageType.MultiTouch
+  touches: TouchItem[]
+
+  getPayload(): Buffer {
+    const data = Buffer.concat(this.touches.map(i => i.getPayload()))
+    return data
+  }
+
+  constructor(touchData: { x: number; y: number; action: MultiTouchAction }[]) {
+    super()
+    this.touches = touchData.map(({ x, y, action }, index) => {
+      return new TouchItem(x, y, action, index)
+    })
+  }
+}
+
 export class SendAudio extends SendableMessageWithPayload {
   type = MessageType.AudioData
   data: Int16Array
