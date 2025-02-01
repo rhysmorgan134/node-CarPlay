@@ -46,7 +46,7 @@ export default class CarplayNode {
       if (message instanceof Plugged) {
         this.clearPairTimeout()
         this.clearFrameInterval()
-        const phoneTypeConfg = this._config.phoneConfig[message.phoneType]
+        const phoneTypeConfg = this._config.phoneConfig?.[message.phoneType]
         if (phoneTypeConfg?.frameInterval) {
           this._frameInterval = setInterval(
             () => {
