@@ -15,6 +15,7 @@ class LxmlSyntaxError(Exception):
 
 class _FakeIncrementalFileWriter(object):
     """Replacement for _IncrementalFileWriter of lxml.
+    
        Uses ElementTree to build xml in memory."""
     def __init__(self, output_file):
         self._element_stack = []
