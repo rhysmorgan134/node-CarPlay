@@ -51,8 +51,8 @@ export type DongleConfig = {
 
 export const DEFAULT_CONFIG: DongleConfig = {
   width: 800,
-  height: 640,
-  fps: 20,
+  height: 480,
+  fps: 60,
   dpi: 160,
   format: 5,
   iBoxVersion: 2,
@@ -78,7 +78,7 @@ export const DEFAULT_CONFIG: DongleConfig = {
 export class DriverStateError extends Error {}
 
 export class DongleDriver extends EventEmitter {
-  private _heartbeatInterval: NodeJS.Timer | null = null
+  private _heartbeatInterval: ReturnType<typeof setInterval> | null = null
   private _device: USBDevice | null = null
   private _inEP: USBEndpoint | null = null
   private _outEP: USBEndpoint | null = null

@@ -31,7 +31,7 @@ export type CarplayMessage =
 
 export default class CarplayNode {
   private _pairTimeout: NodeJS.Timeout | null = null
-  private _frameInterval: NodeJS.Timer | null = null
+  private _frameInterval: ReturnType<typeof setInterval> | null = null
   private _config: DongleConfig
   public dongleDriver: DongleDriver
 
