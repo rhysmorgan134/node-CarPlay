@@ -49,7 +49,7 @@ jobs:
         run: (cd examples/carplay-web-app/build && tar -cvzf ../../../carplay-web-app.tar.gz *)
 
       - name: Upload built example
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: carplay-web-app.tar.gz
           path: carplay-web-app.tar.gz
