@@ -1,4 +1,4 @@
-{
+
   "name": "node-carplay",
   "version": "4.3.0",
   "description": "Carplay dongle driver for Node.js & Browser",
